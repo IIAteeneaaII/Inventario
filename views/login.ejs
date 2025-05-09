@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iniciar Sesión - Sistema de Inventario</title>
+  <link href="/bootstrap-5.0.2/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="/css/styles.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="login_wrapper">
+    <div class="container-md login-card">
+      <div class="login-box w-100">
+        <div class="wrapp">
+          <header class="text-center mb-8">
+            <h1>Sistema de Inventario</h1>
+          </header>
+    
+          <main>
+            <h2 class="text-center mb-4">Iniciar sesión</h2>
+            
+            <% if (typeof error !== 'undefined') { %>
+              <div class="alert alert-danger"><%= error %></div>
+            <% } %>
+            
+            <form id="formLogin" action="/auth/login" method="POST" autocomplete="off" novalidate>
+              <div class="mb-3">
+                <label for="correo" class="form-label">Correo electrónico:</label>
+                <input type="email" class="form-control" id="correo" name="email" 
+                       value="<%= typeof email !== 'undefined' ? email : '' %>" 
+                       placeholder="correo@gmail.com" required />
+              </div>
+    
+              <div class="mb-3">
+                <label for="contrasena" class="form-label">Contraseña:</label>
+                <input type="password" class="form-control" id="contrasena" name="password"
+                    placeholder="Ingresa tu contraseña" required />
+              </div>
+    
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+              </div>
+            </form>
+          </main>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/bootstrap-5.0.2/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://unpkg.com/just-validate@latest/dist/just-validate.production.min.js"></script>
+  <script src="/js/flashMessage.js"></script>
+  <script src="/js/auth.js"></script>
+</body>
+</html>

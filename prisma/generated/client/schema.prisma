@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id        Int        @id @default(autoincrement())
+  nombre    String
+  email     String     @unique
+  password  String
+  rol       String // U.Reg, U.T.I., U.R., etc.
+  registros Registro[]
+  lotes     Lote[]     @relation("UsuarioLotes")
+  createdAt DateTime   @default(now())
+}
+
+model Lote {
+  id        Int        @id @default(autoincrement())
+  numero    String     @unique
+  sku       String
+  usuarioId Int
+  usuario   Usuario    @relation("UsuarioLotes", fields: [usuarioId], references: [id])
+  registros Registro[]
+  createdAt DateTime   @default(now())
+}
+
+model Registro {
+  id        Int      @id @default(autoincrement())
+  sn        String
+  estado    String // SN, SCRAP, Reparación, etc.
+  usuarioId Int
+  loteId    Int
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+  lote      Lote     @relation(fields: [loteId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([sn, loteId]) // Un S/N no se puede repetir en el mismo lote
+}
