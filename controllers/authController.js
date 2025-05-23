@@ -2,6 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+require('dotenv').config(); // cargar variables .env
 
 // Función para iniciar sesión
 const login = async (req, res) => {
@@ -30,14 +31,14 @@ const login = async (req, res) => {
       { expiresIn: '8h' }
     );
 
-    // Enviar respuesta con token
+    // Enviar respuesta con token y rol
     res.json({ 
       token,
+      rol: usuario.rol,
       usuario: {
         id: usuario.id,
         nombre: usuario.nombre,
-        email: usuario.email,
-        rol: usuario.rol
+        email: usuario.email
       }
     });
 
@@ -48,7 +49,7 @@ const login = async (req, res) => {
 };
 
 // Middleware para verificar autenticación
-const verificarAuth = async (req, res, next) => {
+const verificarAuth = (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
   
   if (!token) {
@@ -64,7 +65,16 @@ const verificarAuth = async (req, res, next) => {
   }
 };
 
+// Middleware para verificar rol
+const verificarRol = (rolRequerido) => (req, res, next) => {
+  if (req.usuario?.rol !== rolRequerido) {
+    return res.status(403).json({ error: 'Acceso denegado: rol insuficiente' });
+  }
+  next();
+};
+
 module.exports = {
   login,
-  verificarAuth
+  verificarAuth,
+  verificarRol
 };

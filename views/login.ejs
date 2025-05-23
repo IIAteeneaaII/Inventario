@@ -1,83 +1,51 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión</title>
-    <link rel="stylesheet" href="css/styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Iniciar Sesión</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .error-message {
+      color: red;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .logout-btn {
+      margin-top: 20px;
+      cursor: pointer;
+      padding: 8px 12px;
+      background-color: #c00;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+  </style>
 </head>
 <body>
-    <div class="login-container">
-        <img src="images/logo_ram.png" alt="Logo de la empresa" class="logo">
-        <h2>Iniciar Sesión</h2>
-        <form id="loginForm">
-            <div class="input-group">
-                <label for="usuario">Usuario</label>
-                <input type="text" id="usuario" name="usuario" placeholder="Ingrese su usuario" required>
-            </div>
-            
-            <div class="input-group">
-                <label for="contrasena">Contraseña</label>
-                <input type="password" id="contrasena" name="contrasena" placeholder="Ingrese su contraseña" required>
-            </div>
-            
-            <button type="submit">Iniciar Sesión</button>
-        </form>
-    </div>
+  <div class="login-container">
+    <img src="images/logo_ram.png" alt="Logo de la empresa" class="logo" />
+    <h2>Iniciar Sesión</h2>
 
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const usuario = document.getElementById('usuario').value;
-            const contrasena = document.getElementById('contrasena').value;
-            
-            try {
-                const response = await fetch('/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ usuario, contrasena })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    // Redireccionar según el rol
-                    switch(data.rol) {
-                        case 'admin':
-                            window.location.href = 'busqueda_lote_admin.ejs';
-                            break;
-                        case 'registro':
-                            window.location.href = 'registro_lote.ejs';
-                            break;
-                        case 'testinicial':
-                            window.location.href = 'numero_serie_testinicial.ejs';
-                            break;
-                        case 'cosmetica':
-                            window.location.href = 'numero_serie_cosmetica.ejs';
-                            break;
-                        case 'liberacionlimpieza':
-                            window.location.href = 'numero_serie_liblim.ejs';
-                            break;
-                        case 'retest':
-                            window.location.href = 'numero_serie_retest.ejs';
-                            break;
-                        case 'empaque':
-                            window.location.href = 'numero_serie_empaque.ejs';
-                            break;
-                        default:
-                            alert('Rol no reconocido');
-                    }
-                } else {
-                    alert(data.mensaje || 'Error en el login');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error al conectar con el servidor');
-            }
-        });
-    </script>
+    <div id="errorMessage" class="error-message" style="display:none;"></div>
+
+    <form id="loginForm">
+      <div class="input-group">
+        <label for="usuario">Usuario</label>
+        <input type="text" id="usuario" name="usuario" placeholder="Ingrese su usuario" required />
+      </div>
+
+      <div class="input-group">
+        <label for="contrasena">Contraseña</label>
+        <input type="password" id="contrasena" name="contrasena" placeholder="Ingrese su contraseña" required />
+      </div>
+
+      <button type="submit">Iniciar Sesión</button>
+    </form>
+
+    <button id="logoutBtn" class="logout-btn" style="display:none;">Cerrar Sesión</button>
+  </div>
+
+  <script src="/js/login.js"></script>
 </body>
 </html>

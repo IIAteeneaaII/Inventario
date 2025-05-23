@@ -1,0 +1,174 @@
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const bcrypt = require('bcrypt');
+
+// Listar todos los usuarios sin mostrar contraseñas
+exports.listarUsuarios = async (req, res) => {
+  try {
+    const usuarios = await prisma.usuario.findMany({
+      select: {
+        id: true,
+        nombre: true,
+        email: true,
+        rol: true,
+        createdAt: true,
+      },
+    });
+    res.json(usuarios);
+  } catch (error) {
+    console.error('Error listarUsuarios:', error);
+    res.status(500).json({ error: 'Error al obtener usuarios' });
+  }
+};
+
+// Crear un usuario nuevo con contraseña hasheada
+exports.crearUsuario = async (req, res) => {
+  try {
+    const { nombre, email, password, rol } = req.body;
+
+    // Validar que todos los datos estén presentes
+    if (!nombre || !email || !password || !rol) {
+      return res.status(400).json({ error: 'Faltan datos obligatorios' });
+    }
+
+    // Verificar si el email ya está registrado
+    const existeUsuario = await prisma.usuario.findUnique({ where: { email } });
+    if (existeUsuario) {
+      return res.status(409).json({ error: 'El correo ya está registrado' });
+    }
+
+    // Hashear la contraseña para seguridad
+    const passwordHasheado = await bcrypt.hash(password, 10);
+
+    // Crear el usuario en BD
+    const usuario = await prisma.usuario.create({
+      data: { nombre, email, password: passwordHasheado, rol }
+    });
+
+    // Registrar la acción en logs
+    await prisma.log.create({
+      data: {
+        usuarioId: req.usuario.id,  // Usuario que hizo la acción
+        accion: 'crear',
+        entidad: 'Usuario',
+        detalle: `Creó usuario ${email}`
+      }
+    });
+
+    // Responder con datos básicos del usuario creado (sin password)
+    res.status(201).json({
+      id: usuario.id,
+      nombre: usuario.nombre,
+      email: usuario.email,
+      rol: usuario.rol
+    });
+  } catch (error) {
+    console.error('Error crearUsuario:', error);
+    res.status(500).json({ error: 'Error al crear usuario' });
+  }
+};
+
+// Actualizar datos de usuario existente (sin cambiar contraseña)
+exports.actualizarUsuario = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { nombre, email, rol } = req.body;
+
+    // Validar campos obligatorios
+    if (!nombre || !email || !rol) {
+      return res.status(400).json({ error: 'Faltan datos obligatorios' });
+    }
+
+    // Verificar si el usuario existe
+    const usuarioExistente = await prisma.usuario.findUnique({ where: { id } });
+    if (!usuarioExistente) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Verificar que el email no esté registrado en otro usuario
+    const emailEnUso = await prisma.usuario.findFirst({
+      where: { email, NOT: { id } }
+    });
+    if (emailEnUso) {
+      return res.status(409).json({ error: 'El email ya está registrado por otro usuario' });
+    }
+
+    // Actualizar usuario en BD
+    const usuarioActualizado = await prisma.usuario.update({
+      where: { id },
+      data: { nombre, email, rol }
+    });
+
+    // Registrar acción en logs
+    await prisma.log.create({
+      data: {
+        usuarioId: req.usuario.id,
+        accion: 'editar',
+        entidad: 'Usuario',
+        detalle: `Actualizó usuario ID ${id}`
+      }
+    });
+
+    // Responder con datos actualizados
+    res.json({
+      id: usuarioActualizado.id,
+      nombre: usuarioActualizado.nombre,
+      email: usuarioActualizado.email,
+      rol: usuarioActualizado.rol
+    });
+  } catch (error) {
+    console.error('Error actualizarUsuario:', error);
+    res.status(500).json({ error: 'Error actualizando usuario' });
+  }
+};
+
+// Eliminar usuario por ID
+exports.eliminarUsuario = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+
+    // Validar que el id sea número
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'ID inválido' });
+    }
+
+    // Verificar que el usuario exista
+    const usuarioExistente = await prisma.usuario.findUnique({ where: { id } });
+    if (!usuarioExistente) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Eliminar usuario
+    const usuarioEliminado = await prisma.usuario.delete({ where: { id } });
+
+    // Registrar acción en logs
+    await prisma.log.create({
+      data: {
+        usuarioId: req.usuario.id,
+        accion: 'eliminar',
+        entidad: 'Usuario',
+        detalle: `Eliminó usuario ID ${id}`
+      }
+    });
+
+    // Responder con confirmación
+    res.json({ mensaje: 'Usuario eliminado correctamente', usuario: { id: usuarioEliminado.id, email: usuarioEliminado.email } });
+  } catch (error) {
+    console.error('Error eliminarUsuario:', error);
+    res.status(500).json({ error: 'Error al eliminar usuario' });
+  }
+};
+
+// Obtener registros de logs de auditoría
+exports.verLogs = async (req, res) => {
+  try {
+    const logs = await prisma.log.findMany({
+      include: { usuario: { select: { id: true, nombre: true, email: true } } },
+      orderBy: { timestamp: 'desc' }
+    });
+    res.json(logs);
+  } catch (error) {
+    console.error('Error verLogs:', error);
+    res.status(500).json({ error: 'Error al obtener logs' });
+  }
+};
