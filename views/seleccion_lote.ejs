@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selección de Lote Existente</title>
+    <link rel="stylesheet" href="css/mostrar_lote.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Fase Registro</h1>
+            <h2>Selección de Lote Existente</h2>
+            <div class="user-profile">
+                <img src="images/usuario.webp" alt="Usuario" class="user-avatar">
+                <span id="username-display" class="user-name">Usuario</span>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="lotes-container">
+                <!-- Barra de búsqueda -->
+                <div class="search-bar">
+                    <input type="text" id="buscar-lote" class="search-input" placeholder="Buscar lote...">
+                    <button class="search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+
+                <!-- Tabla de lotes -->
+                <div class="table-container">
+                    <table class="lotes-table">
+                        <thead>
+                            <tr>
+                                <th>N° Lote</th>
+                                <th>SKU</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-lotes">
+                            <!-- Ejemplo de fila de datos -->
+                            <tr>
+                                <td>LOT-001</td>
+                                <td>SKU12345</td>
+                                <td>25/04/2023</td>
+                                <td><span class="estado-activo">Activo</span></td>
+                                <td>
+                                    <button class="btn-accion ver-btn" title="Ver detalles">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn-accion seleccionar-btn" title="Seleccionar">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>LOT-002</td>
+                                <td>SKU54321</td>
+                                <td>20/04/2023</td>
+                                <td><span class="estado-inactivo">Inactivo</span></td>
+                                <td>
+                                    <button class="btn-accion ver-btn" title="Ver detalles">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn-accion seleccionar-btn" title="Seleccionar">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <!-- Más filas se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                <div class="pagination">
+                    <button id="prev-page" class="pagination-btn" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span id="page-info">Página 1 de 3</span>
+                    <button id="next-page" class="pagination-btn">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <div class="actions-bar">
+            <button id="volver-btn" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </button>
+            <button id="confirmar-seleccion-btn" class="btn-primary" disabled>
+                <i class="fas fa-check-circle"></i> Confirmar Selección
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+    // Variables globales
+    let currentPage = 1;
+    const itemsPerPage = 5;
+    let allLotes = [];
+    let selectedLoteId = null;
+    
+    // Elementos del DOM
+    const tablaLotes = document.getElementById('tabla-lotes');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+    const pageInfo = document.getElementById('page-info');
+    const buscarLoteInput = document.getElementById('buscar-lote');
+    const searchBtn = document.querySelector('.search-btn');
+    const confirmarSeleccionBtn = document.getElementById('confirmar-seleccion-btn');
+    const volverBtn = document.getElementById('volver-btn');
+    const usernameDisplay = document.getElementById('username-display');
+    
+    // Datos de ejemplo (simulando una API)
+    const lotesData = [
+        { id: 1, numero: 'LOT-001', sku: 'SKU12345', fecha: '25/04/2023', estado: 'Activo' },
+        { id: 2, numero: 'LOT-002', sku: 'SKU54321', fecha: '20/04/2023', estado: 'Inactivo' },
+        { id: 3, numero: 'LOT-003', sku: 'SKU67890', fecha: '18/04/2023', estado: 'Activo' },
+        { id: 4, numero: 'LOT-004', sku: 'SKU09876', fecha: '15/04/2023', estado: 'Activo' },
+        { id: 5, numero: 'LOT-005', sku: 'SKU13579', fecha: '10/04/2023', estado: 'Inactivo' },
+        { id: 6, numero: 'LOT-006', sku: 'SKU24680', fecha: '05/04/2023', estado: 'Activo' },
+        { id: 7, numero: 'LOT-007', sku: 'SKU11223', fecha: '01/04/2023', estado: 'Activo' },
+    ];
+    
+    // Inicialización
+    function init() {
+        // Mostrar nombre de usuario (simulado)
+        const username = localStorage.getItem('username') || 'Usuario';
+        usernameDisplay.textContent = username;
+        
+        // Cargar datos
+        allLotes = [...lotesData];
+        renderTable();
+        setupEventListeners();
+    }
+    
+    // Renderizar tabla con paginación
+    function renderTable() {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const lotesToShow = allLotes.slice(startIndex, endIndex);
+        
+        tablaLotes.innerHTML = '';
+        
+        if (lotesToShow.length === 0) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td colspan="5" style="text-align: center;">No se encontraron lotes</td>`;
+            tablaLotes.appendChild(tr);
+            return;
+        }
+        
+        lotesToShow.forEach(lote => {
+            const tr = document.createElement('tr');
+            tr.dataset.id = lote.id;
+            
+            // Resaltar fila seleccionada
+            if (selectedLoteId === lote.id) {
+                tr.classList.add('selected-row');
+            }
+            
+            tr.innerHTML = `
+                <td>${lote.numero}</td>
+                <td>${lote.sku}</td>
+                <td>${lote.fecha}</td>
+                <td><span class="estado-${lote.estado.toLowerCase()}">${lote.estado}</span></td>
+                <td>
+                    <button class="btn-accion ver-btn" title="Ver detalles">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn-accion seleccionar-btn" title="Seleccionar">
+                        <i class="fas fa-check"></i>
+                    </button>
+                </td>
+            `;
+            
+            tablaLotes.appendChild(tr);
+        });
+        
+        // Actualizar paginación
+        updatePagination();
+    }
+    
+    // Actualizar controles de paginación
+    function updatePagination() {
+        const totalPages = Math.ceil(allLotes.length / itemsPerPage);
+        
+        pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+        prevPageBtn.disabled = currentPage === 1;
+        nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
+    }
+    
+    // Configurar event listeners
+    function setupEventListeners() {
+        // Paginación
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        });
+        
+        nextPageBtn.addEventListener('click', () => {
+            const totalPages = Math.ceil(allLotes.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+            }
+        });
+        
+        // Búsqueda
+        searchBtn.addEventListener('click', handleSearch);
+        buscarLoteInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleSearch();
+            }
+        });
+        
+        // Selección de lote (event delegation)
+        tablaLotes.addEventListener('click', (e) => {
+            const row = e.target.closest('tr');
+            if (!row) return;
+            
+            const loteId = parseInt(row.dataset.id);
+            
+            // Botón de seleccionar
+            if (e.target.closest('.seleccionar-btn')) {
+                selectedLoteId = selectedLoteId === loteId ? null : loteId;
+                confirmarSeleccionBtn.disabled = selectedLoteId === null;
+                
+                // Resaltar fila seleccionada
+                document.querySelectorAll('tr').forEach(tr => {
+                    tr.classList.remove('selected-row');
+                });
+                
+                if (selectedLoteId) {
+                    row.classList.add('selected-row');
+                }
+            }
+            
+            // Botón de ver detalles
+            if (e.target.closest('.ver-btn')) {
+                alert(`Mostrando detalles del lote ${loteId}`);
+                // Aquí podrías abrir un modal o redirigir a otra página
+            }
+        });
+        
+        // Confirmar selección
+        confirmarSeleccionBtn.addEventListener('click', () => {
+            if (selectedLoteId) {
+                const loteSeleccionado = allLotes.find(l => l.id === selectedLoteId);
+                alert(`Lote seleccionado: ${loteSeleccionado.numero}\nSKU: ${loteSeleccionado.sku}`);
+                // Aquí podrías redirigir o guardar la selección
+            }
+        });
+        
+        // Botón volver
+        volverBtn.addEventListener('click', () => {
+            window.location.href = 'menu-principal.html'; // Cambiar por tu URL
+        });
+    }
+    
+    // Manejar búsqueda
+    function handleSearch() {
+        const searchTerm = buscarLoteInput.value.trim().toLowerCase();
+        
+        if (searchTerm === '') {
+            allLotes = [...lotesData];
+        } else {
+            allLotes = lotesData.filter(lote => 
+                lote.numero.toLowerCase().includes(searchTerm) ||
+                lote.sku.toLowerCase().includes(searchTerm) ||
+                lote.fecha.toLowerCase().includes(searchTerm) ||
+                lote.estado.toLowerCase().includes(searchTerm)
+            );
+        }
+        
+        currentPage = 1;
+        selectedLoteId = null;
+        confirmarSeleccionBtn.disabled = true;
+        renderTable();
+    }
+    
+    // Iniciar la aplicación
+    init();
+});
+    </script>
+</body>
+</html>

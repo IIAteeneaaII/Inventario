@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selección de Opciones</title>
+    <link rel="stylesheet" href="css/seleccion.css">
+
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-title">
+                <h1>Asignación de Lote</h1>
+                <h2>Fase registro</h2>
+            </div>
+            <div class="user-profile">
+                <img src="images/usuario.webp" alt="Usuario" class="user-avatar">
+                <span id="username-display" class="user-name">Usuario</span>
+            </div>
+        </header>
+
+
+        <main class="main-content">
+            <form class="asignacion-form">
+                <div class="form-group">
+                    <label for="numero-lote"><i class="fas fa-hashtag"></i> Número de Lote</label>
+                    <input type="text" id="numero-lote" class="form-input" placeholder="Ingrese el número de lote" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="sku"><i class="fas fa-barcode"></i> Selecciona el SKU</label>
+                    <select id="sku" class="form-select" required>
+                        <option value="" disabled selected>Seleccione un SKU</option>
+                        <option value="Fiberhome">Fiberhome</option>
+                        <option value="V5 Small">V5 Small</option>
+                        <option value="4K M36 Blanco">4K M36 Blanco</option>
+                        <option value="4K M36 Azul">4K M36 Azul</option>
+                        <option value="4K M37">4K M37</option>
+                        <option value="AP84">AP84</option>
+                        <option value="AP85">AP85</option>
+                        <option value="Big">Big</option>
+                        <option value="X6 Small">X6 Small</option>
+                        <option value="ZTE">ZTE</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-plus-circle"></i> Crear Asignación
+                </button>
+            </form>
+        </main>
+    </div>
+
+    
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar usuario
+    const usuario = localStorage.getItem('usuarioActual') || 'Usuario';
+    document.getElementById('username-display').textContent = usuario;
+
+    // Manejar envío del formulario
+    const form = document.querySelector('.selection-form');
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const tipoProceso = document.getElementById('tipo-proceso').value;
+        const categoria = document.getElementById('categoria').value;
+        const prioridad = document.getElementById('prioridad').value;
+
+        // Validación
+        if (!tipoProceso || !categoria) {
+            alert('Por favor complete todos los campos requeridos');
+            return;
+        }
+
+        // Crear objeto con los datos
+        const seleccion = {
+            proceso: tipoProceso,
+            categoria: categoria,
+            prioridad: prioridad,
+            usuario: usuario,
+            fecha: new Date().toISOString()
+        };
+
+        console.log('Datos seleccionados:', seleccion);
+        
+        // Aquí puedes enviar los datos al servidor o redirigir
+        // Ejemplo:
+        // localStorage.setItem('seleccionActual', JSON.stringify(seleccion));
+        // window.location.href = 'procesar.html';
+        
+        alert('Selección registrada correctamente');
+    });
+
+    // Manejar cambio en Tipo de Proceso
+    document.getElementById('tipo-proceso').addEventListener('change', function() {
+        console.log('Proceso seleccionado:', this.value);
+        // Puedes agregar lógica adicional aquí
+    });
+});
+</script>
+</body>
+</html>

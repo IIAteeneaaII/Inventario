@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fase Registro</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Usuario en esquina superior derecha -->
+    <div class="top-right">
+        <img src="images/usuario.webp" alt="Usuario" class="user-icon">
+        <div class="username" id="username-display">Usuario</div>
+    </div>
+
+    <!-- Contenido principal centrado -->
+    <div class="container">
+        <div class="title-container">
+            <h5>Fase Registro</h5>
+            <h2>Registro de Nuevo Lote</h2>
+        </div>
+        
+        <div class="button-container">
+            <button class="btn-custom" id="crear-lote">
+                <span class="btn-icon">+</span>
+                <span>Crear nuevo lote</span>
+            </button>
+            
+            <button class="btn-custom" id="modificar-lote">
+                <span class="btn-icon">-</span>
+                <span>Seleccionar lote existente</span>
+            </button>
+        </div>
+    </div>
+
+    <script >
+        // Función para cargar datos del usuario
+function cargarUsuario() {
+    // Obtener usuario de localStorage (simulado)
+    const usuario = localStorage.getItem('usuarioActual') || 'Usuario';
+    document.getElementById('username-display').textContent = usuario;
+    
+    // Opcional: cargar imagen específica del usuario
+    // const avatarUrl = `images/usuarios/${usuario}.png`;
+    // document.querySelector('.user-icon').src = avatarUrl;
+}
+
+// Eventos para los botones
+document.getElementById('crear-lote').addEventListener('click', () => {
+    console.log('Crear nuevo lote');
+    // window.location.href = 'crear-lote.html';
+});
+
+document.getElementById('modificar-lote').addEventListener('click', () => {
+    console.log('Modificar lote existente');
+    // window.location.href = 'modificar-lote.html';
+});
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', cargarUsuario);
+    </script>
+</body>
+</html>
