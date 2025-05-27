@@ -9,14 +9,14 @@ datasource db {
 
 enum Rol {
   UAI // Administrador de Inventario
-  UA // Usuario Almacén
-  UV // Usuario Visualizador
-  UReg // Usuario Registro
-  UTI // Usuario Test Inicial
-  UR // Usuario Reparación
-  UC // Usuario Calidad
-  UE // Usuario Empaque
-  ULL // Usuario Línea de Lote
+  UA // User Almacén
+  UV // User Visualizador
+  UReg // User Registro
+  UTI // User Test Inicial
+  UR // User Reparación
+  UC // User Calidad
+  UE // User Empaque
+  ULL // User Línea de Lote
 }
 
 enum EstadoRegistro {
@@ -27,14 +27,15 @@ enum EstadoRegistro {
   REPARACION
 }
 
-model Usuario {
+model User {
   id        Int        @id @default(autoincrement())
   nombre    String
+  userName       String
   email     String     @unique
   password  String
   rol       Rol
   registros Registro[]
-  lotes     Lote[]     @relation("UsuarioLotes")
+  lotes     Lote[]     @relation("UserLotes")
   logs      Log[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -44,8 +45,8 @@ model Lote {
   id        Int        @id @default(autoincrement())
   numero    String     @unique
   sku       String
-  usuarioId Int
-  usuario   Usuario    @relation("UsuarioLotes", fields: [usuarioId], references: [id])
+  UserId Int
+  User   User    @relation("UserLotes", fields: [UserId], references: [id])
   registros Registro[]
   createdAt DateTime   @default(now())
 }
@@ -54,23 +55,32 @@ model Registro {
   id        Int            @id @default(autoincrement())
   sn        String
   estado    EstadoRegistro
-  usuarioId Int
+  UserId Int
   loteId    Int
-  usuario   Usuario        @relation(fields: [usuarioId], references: [id])
+  User   User        @relation(fields: [UserId], references: [id])
   lote      Lote           @relation(fields: [loteId], references: [id])
   createdAt DateTime       @default(now())
 
   @@unique([sn, loteId])
-  @@index([usuarioId])
+  @@index([UserId])
   @@index([loteId])
 }
 
 model Log {
   id        Int      @id @default(autoincrement())
-  usuarioId Int
-  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+  UserId Int
+  User   User  @relation(fields: [UserId], references: [id])
   accion    String
   entidad   String
   detalle   String?
   timestamp DateTime @default(now())
+}
+
+
+model ResetCode {
+  id         Int      @id @default(autoincrement())
+  email      String
+  code       String
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
 }
