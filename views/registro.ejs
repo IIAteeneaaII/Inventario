@@ -2,88 +2,64 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <%- include('partials/allStyles') %>
-    <title>Registro Fin It</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="/bootstrap-5.0.2/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="../css/styles.css" rel="stylesheet" />
+  <title>Registro RAM</title>
 </head>
 
 <body>
-    <div class="login-wrapper">
-        <div class="hero-img">
-            <img src="/img/backgroundImg.png" class="img" alt="Fin It" />
-        </div>
+  <div class="login-container">
+    <img src="../images/logo_ram.png" alt="Logo RAM" class="logo">
+    <h2 class="text-center mb-4">Registrarse</h2>
 
-    <div class="login-card position-relative">
-        <img src="/img/tiburon.gif" alt="Tiburón" class="shark-random" />
-        <div class="login-box w-100">
-            <div class="wrapp">
-                <header class="text-center ">
-                    <div class="container_logo">
-                    </div>
-                </header>
+    <form id="formRegistro" action="/api/auth/register" method="POST" autocomplete="off" novalidate>
+      <!-- Usuario -->
+      <div class="mb-3">
+        <label for="userName" class="form-label">Nombre de usuario:</label>
+        <input type="text" class="form-control" id="userName" name="userName" placeholder="Ingresa tu usuario" />
+      </div>
 
-                <main>
-                    <h2 class="text-center mb-4">Registrarse</h2>
-                        <form id="formRegistro" autocomplete="off" action="/api/auth/register" method="POST">
-                            <!-- Usuario -->
-                            <div class="mb-3">
-                                <label for="nombre" class="form-label">Nombre de usuario:</label>
-                                <input type="text" class="form-control" id="userName" name="userName"
-                                    placeholder="Ingresa tu usuario" />
-                            </div>
+      <!-- Correo -->
+        <div class="mb-3">
+    <label for="correo" class="form-label">Correo electrónico:</label>
+    <input type="text" class="form-control" id="correo" name="email" placeholder="correo@gmail.com" />
+  </div>
 
-                            <!-- Correo -->
-                            <div class="mb-3">
-                                <label for="correo" class="form-label">Correo electrónico:</label>
-                                <input type="email" class="form-control" id="email" name="email"
-                                    placeholder="Ingresa tu correo" />
-                            </div>
+      <!-- Contraseña -->
+      <div class="mb-3">
+        <label for="password" class="form-label">Contraseña:</label>
+        <input type="password" class="form-control" id="password" name="password" placeholder="Ingresa tu contraseña" />
+      </div>
 
-                            <!-- Contraseña -->
-                            <div class="mb-3">
-                                <label for="contrasena" class="form-label">Contraseña:</label>
-                                <div class="d-block">
-                                    <input type="password" class="form-control" id="password" name="password"
-                                        placeholder="Ingresa tu contraseña" />
-                                </div>
-                            </div>
+      <!-- Confirmar Contraseña -->
+      <div class="mb-3">
+        <label for="confirmarContrasena" class="form-label">Confirmar contraseña:</label>
+        <input type="password" class="form-control" id="confirmarContrasena" name="confirmarContrasena" placeholder="Confirma tu contraseña" />
+      </div>
 
-                            <!-- Confirmar contraseña -->
-                            <div class="mb-3">
-                                <label for="confirmarContrasena" class="form-label">Confirmar contraseña:</label>
-                                <div class="d-block">
-                                    <input type="password" class="form-control" id="confirmarContrasena"
-                                        name="confirmarContrasena" placeholder="Confirma tu contraseña" />
-                                </div>
-                            </div>
+      <!-- Términos -->
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="terminosCheck" required />
+        <label class="form-check-label" for="terminosCheck">
+          Aceptar <a class="link" href="/terminosyCondiciones">términos y condiciones</a>
+        </label>
+      </div>
 
-                            <!-- Términos -->
-                            <div class="form-check">
-                                <input class="check" type="checkbox" id="terminosCheck" />
-                                <label class="form-check-label" for="terminosCheck">
-                                    Aceptar <a class="link" href="/terminosyCondiciones">términos y condiciones</a>
-                                </label>
-                            </div>
+      <!-- Botones -->
+      <button type="submit" class="btn btn-success w-100 mb-2">Registrarse</button>
+      <button type="button" class="btn btn-secondary w-100" onclick="history.back()">Cancelar</button>
+    </form>
 
-                            <!-- Botones -->
-                            <div class="registroBtn">
-                                <button type="submit" class="btn-primary">Registrarse</button>
-                                <button type="button" class="btn-secondary" id="btn-cancelar" onclick="history.back()">Cancelar</button>
-                            </div>
-                        </form>
+    <p class="text-end mt-3">
+      ¿Ya tienes cuenta? <a class="link" href="/">Inicia sesión</a>
+    </p>
+  </div>
 
-                        <p class="text-end mt-2">
-                            ¿Ya tienes cuenta? <a class="link" href="/">Inicia sesión</a>
-                        </p>
-                </main>
-            </div>
-        </div>
-    </div>
-    <%- include('partials/allScripts') %>
-    <script src="/js/registro.js"></script>
-    <script src="/js/flashMessage.js"></script>
-
+  <script src="/bootstrap-5.0.2/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/registro.js"></script>
+  <script src="/js/flashMessage.js"></script>
 </body>
 
 </html>

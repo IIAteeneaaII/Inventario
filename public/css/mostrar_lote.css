@@ -1,0 +1,281 @@
+/* Estilos generales */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #365a66;
+    color: #333;
+    min-height: 100vh;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f5f5f5;
+}
+
+/* Estilos del encabezado */
+.app-header {
+    background-color: #365a66;
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.app-header h1 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 400;
+}
+
+.app-header h2 {
+    margin: 0.5rem 0 0 0;
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.user-profile {
+    position: absolute;
+    top: 1rem;
+    right: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-name {
+    font-weight: 500;
+    color: white;
+}
+
+/* Contenido principal */
+.main-content {
+    flex: 1;
+    padding: 2rem;
+    background-color: #ecf0f1;
+}
+
+.lotes-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Barra de búsqueda */
+.search-bar {
+    display: flex;
+    margin-bottom: 1.5rem;
+}
+
+.search-input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+    font-size: 1em;
+    outline: none;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+}
+
+.search-input:focus {
+    border-color: #4CAF50;
+}
+
+.search-btn {
+    padding: 0 1.2rem;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 1em;
+}
+
+.search-btn:hover {
+    background-color: #45a049;
+}
+
+/* Tabla de lotes */
+.table-container {
+    overflow-x: auto;
+}
+
+.lotes-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+}
+
+.lotes-table th {
+    background-color: #f8f9fa;
+    padding: 12px;
+    text-align: left;
+    font-weight: bold;
+    color: #555;
+    border-bottom: 2px solid #ddd;
+    font-size: 0.9em;
+}
+
+.lotes-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+.lotes-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Estados */
+.estado-activo {
+    background-color: #4CAF50;
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+
+.estado-inactivo {
+    background-color: #e74c3c;
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+
+/* Botones de acción */
+.btn-accion {
+    background: none;
+    border: none;
+    color: #7f8c8d;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.3s;
+    margin-right: 0.5rem;
+}
+
+.btn-accion:hover {
+    background-color: #f1f1f1;
+    color: #365a66;
+}
+
+.seleccionar-btn {
+    color: #4CAF50;
+}
+
+.seleccionar-btn:hover {
+    background-color: rgba(76, 175, 80, 0.1);
+}
+
+.ver-btn {
+    color: #365a66;
+}
+
+.ver-btn:hover {
+    background-color: rgba(54, 90, 102, 0.1);
+}
+
+/* Paginación */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.pagination-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 1em;
+}
+
+.pagination-btn:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #45a049;
+}
+
+#page-info {
+    font-weight: 500;
+    color: #555;
+}
+
+/* Barra de acciones */
+.actions-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    background-color: white;
+    border-top: 1px solid #ddd;
+    position: sticky;
+    bottom: 0;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1em;
+    width: auto;
+}
+
+.btn-primary {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+}
+
+.btn-primary:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: #45a049;
+}
+
+.btn-secondary {
+    background-color: white;
+    color: #365a66;
+    border: 1px solid #365a66;
+}
+
+.btn-secondary:hover {
+    background-color: #f1f1f1;
+}
+
+/* Estilos para fila seleccionada */
+.selected-row {
+    background-color: rgba(76, 175, 80, 0.1) !important;
+    outline: 2px solid #4CAF50;
+}
