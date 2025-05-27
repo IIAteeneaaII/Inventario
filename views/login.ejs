@@ -1,51 +1,89 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Iniciar Sesión</title>
-  <link rel="stylesheet" href="css/styles.css" />
-  <style>
-    .error-message {
-      color: red;
-      margin-bottom: 10px;
-      font-weight: bold;
-    }
-    .logout-btn {
-      margin-top: 20px;
-      cursor: pointer;
-      padding: 8px 12px;
-      background-color: #c00;
-      color: white;
-      border: none;
-      border-radius: 4px;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iniciar Sesión RAM</title>
+  <link href="/bootstrap-5.0.2/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="/css/styles.css" rel="stylesheet" />
+
 </head>
+
 <body>
-  <div class="login-container">
-    <img src="images/logo_ram.png" alt="Logo de la empresa" class="logo" />
-    <h2>Iniciar Sesión</h2>
+  <div class="login-wrapper">
+    <div class="hero-img">
+      <img src="/img/backgroundImg.png" class="img" alt="Fin It" />
+    </div>
 
-    <div id="errorMessage" class="error-message" style="display:none;"></div>
+    <div class="login-card position-relative">
+      <img src="/img/tiburon.gif" alt="Tiburón" class="shark-random" />
+      <div class="login-box w-100">
+        <h1>FIN IT</h1>
+        <div class="wrapp">
+          <header class="text-center mb-8">
+            <div class="container_logo">
+            </div>
+          </header>
 
-    <form id="loginForm">
-      <div class="input-group">
-        <label for="usuario">Usuario</label>
-        <input type="text" id="usuario" name="usuario" placeholder="Ingrese su usuario" required />
+          <main>
+            <h2 class="text-center mb-4">Iniciar sesión</h2>
+            <form id="formLogin" action="/api/auth/login" method="POST" autocomplete="off" novalidate>
+              <div class="mb-3">
+                <label for="correo" class="form-label">Correo electrónico:</label>
+                <input type="email" class="form-control" id="correo" name="email" placeholder="correo@gmail.com" />
+              </div>
+
+              <div class="mb-3">
+                <label for="contrasena" class="form-label">Contraseña:</label>
+                <input type="password" class="form-control" id="contrasena" name="password"
+                  placeholder="Ingresa tu contraseña" />
+              </div>
+
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+              </div>
+            </form>
+
+            <div class="text-end mt-3">
+              <a class="link" href="/olvidarcontrasena">Olvidé mi contraseña</a>
+            </div>
+            <div class="text-end mt-2">
+              <span>¿No tienes cuenta? <a class="link" href="/registro">Regístrate</a></span>
+            </div>
+          </main>
+        </div>
       </div>
-
-      <div class="input-group">
-        <label for="contrasena">Contraseña</label>
-        <input type="password" id="contrasena" name="contrasena" placeholder="Ingrese su contraseña" required />
-      </div>
-
-      <button type="submit">Iniciar Sesión</button>
-    </form>
-
-    <button id="logoutBtn" class="logout-btn" style="display:none;">Cerrar Sesión</button>
+    </div>
   </div>
 
-  <script src="/js/login.js"></script>
+  <script src="/bootstrap-5.0.2/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://unpkg.com/just-validate@latest/dist/just-validate.production.min.js"></script>
+  <script src="/js/index.js"></script>
+  <script src="/js/flashMessage.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("formLogin");
+      const emailInput = document.getElementById("correo");
+
+      // Cargar el correo si ya está guardado
+      const savedEmail = localStorage.getItem("savedEmail");
+      if (savedEmail) {
+        emailInput.value = savedEmail;
+      }
+
+      // Guardar el correo al enviar el formulario
+      form.addEventListener("submit", (e) => {
+        const email = emailInput.value;
+        if (email) {
+          localStorage.setItem("savedEmail", email);
+        }
+      });
+    });
+  </script>
+
 </body>
+
 </html>
