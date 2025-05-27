@@ -5,6 +5,9 @@ const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');  // Rutas para administrador
 const inventoryRoutes = require('./routes/inventoryRoutes');
 const { verificarAuth, verificarRol } = require('./controllers/authController');
+const PORT = 3000;
+const HOST = '0.0.0.0'; // Escucha en todas las interfaces
+
 
 const app = express();
 
@@ -66,8 +69,42 @@ app.use((err, req, res, next) => {
   res.status(500).render('error', { message: 'Error en el servidor' });
 });
 
-// Iniciar servidor en puerto definido o 3000
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+
+app.get('/TerminosyCondiciones', (req, res) => {
+    res.render('terminosyCondiciones');
 });
+
+app.get('/Notificaciones', authMiddleware, async (req, res) => {
+    const notifications = await getRecentNotifications(req.user.id);
+
+    markAllAsRead(req.user.id);
+
+    res.render('notificaciones', {
+        notifications
+    });
+});
+
+app.get('/EliminarCuenta', authMiddleware, (req, res) => {
+    res.render('eliminarCuenta');
+});
+
+app.get('/EliminarCuenta1', authMiddleware, (req, res) => {
+    res.render('eliminarCuenta1');
+});
+
+app.get('/EliminarCuenta2', authMiddleware, (req, res) => {
+    res.render('eliminarCuenta2');
+});
+
+app.get('/Privacidad', authMiddleware, (req, res) => {
+    res.render('privacidad');
+});
+
+app.listen(PORT, HOST, async () => {
+    console.log(`Server running at http://${HOST}:${PORT}`);
+    await loadAllJobs();
+});
+
+app.use('/api/auth', authRoutes);
+app.use('/api/habit', authMiddleware, inventaryRoutes);
+app.use('/api/inicio', authMiddleware, principalScrRoutes);
