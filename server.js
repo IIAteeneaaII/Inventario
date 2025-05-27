@@ -8,11 +8,10 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
+const principalScrRoutes = require('./routes/principalScrRoutes');
 const { verificarAuth, verificarRol } = require('./controllers/authController');
 const { authMiddleware } = require('./middlewares/authMiddleware');
-
-// Rutas API adicionales (asegúrate de crearlas también)
-const principalScrRoutes = require('./routes/principalScrRoutes');
+const { loadAllJobs } = require('./utils/jobManager');
 
 const PORT = 3000;
 const HOST = '0.0.0.0';
@@ -39,8 +38,8 @@ app.use(session({
 // Rutas de autenticación
 app.use('/auth', authRoutes);
 
-// Página de login
-app.get('/login', (req, res) => {
+// Vista principal de login desde raíz
+app.get('/', (req, res) => {
   res.render('login', {
     error: req.session?.error,
     success: req.session?.success
@@ -49,37 +48,50 @@ app.get('/login', (req, res) => {
   req.session.success = null;
 });
 
-// Redirección desde raíz
-app.get('/', (req, res) => res.redirect('/login'));
+// Ruta de registro
+app.get('/registro', (req, res) => {
+  res.render('registro', {
+    error: req.session?.error,
+    success: req.session?.success
+  });
+});
 
 // Rutas protegidas
 app.use('/admin', verificarAuth, verificarRol('UAI'), adminRoutes);
 app.use('/api', verificarAuth, inventoryRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/inicio', authMiddleware, principalScrRoutes);
 
-// Dashboard admin
-app.get('/admin/dashboard', verificarAuth, verificarRol('UAI'), (req, res) => {
-  res.render('admin_dashboard', { usuario: req.user });
+app.get('/dashboard', verificarAuth, (req, res) => {
+  if (req.user.rol === 'UAI') {
+    return res.redirect('/admin/dashboard');
+  }
+
+  res.render('dashboard', { usuario: req.user });
 });
 
-// Rutas EJS protegidas
-app.get('/TerminosyCondiciones', (req, res) => {
-  res.render('terminosyCondiciones');
-});
-
-//app.get('/Notificaciones', authMiddleware, async (req, res) => {
-  //const notifications = await getRecentNotifications(req.user.id);
-  //await markAllAsRead(req.user.id);
-  //res.render('notificaciones', { notifications });
-//});
-
+// Pruebas
+// Rutas EJS informativas
+app.get('/TerminosyCondiciones', (req, res) => res.render('terminosyCondiciones'));
 app.get('/EliminarCuenta', authMiddleware, (req, res) => res.render('eliminarCuenta'));
 app.get('/EliminarCuenta1', authMiddleware, (req, res) => res.render('eliminarCuenta1'));
 app.get('/EliminarCuenta2', authMiddleware, (req, res) => res.render('eliminarCuenta2'));
 app.get('/Privacidad', authMiddleware, (req, res) => res.render('privacidad'));
 
-// Rutas API adicionales protegidas
-app.use('/api/auth', authRoutes);
-app.use('/api/inicio', authMiddleware, principalScrRoutes);
+// Vistas de lotes y administración
+app.get('/asignacion-lote', verificarAuth, (req, res) => res.render('asignacion_lote'));
+app.get('/registro-lote', verificarAuth, (req, res) => res.render('registro_lote'));
+app.get('/consulta-ns-admin', verificarAuth, (req, res) => res.render('consulta_ns_admin'));
+app.get('/seleccion-lote-admin', verificarAuth, (req, res) => res.render('seleccion_lote_admin'));
+
+// Vistas de número de serie por área
+app.get('/numero-serie-registro', verificarAuth, (req, res) => res.render('numero_serie_registro'));
+app.get('/numero-serie-cosmetica', verificarAuth, (req, res) => res.render('numero_serie_cosmetica'));
+app.get('/numero-serie-empaque', verificarAuth, (req, res) => res.render('numero_serie_empaque'));
+app.get('/numero-serie-liblim', verificarAuth, (req, res) => res.render('numero_serie_liblim'));
+app.get('/numero-serie-retest', verificarAuth, (req, res) => res.render('numero_serie_retest'));
+app.get('/numero-serie-testinicial', verificarAuth, (req, res) => res.render('numero_serie_testinicial'));
+app.get('/seleccion-lote', verificarAuth, (req, res) => res.render('seleccion_lote'));
 
 // Middleware de error general
 app.use((err, req, res, next) => {
@@ -88,16 +100,12 @@ app.use((err, req, res, next) => {
 });
 
 // Inicio del servidor
-const { loadAllJobs } = require('./utils/jobManager');
 app.listen(PORT, HOST, async () => {
   console.log(`Server running at http://${HOST}:${PORT}`);
-  await loadAllJobs();
-});
-
-//Registro
-app.get('/registro', (req, res) => {
-  res.render('registro', {
-    error: req.session?.error,
-    success: req.session?.success
-  });
+  try {
+    await loadAllJobs();
+    console.log('Tareas programadas cargadas');
+  } catch (err) {
+    console.error('Error al cargar tareas programadas:', err);
+  }
 });
