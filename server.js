@@ -93,3 +93,11 @@ app.listen(PORT, HOST, async () => {
   console.log(`Server running at http://${HOST}:${PORT}`);
   await loadAllJobs();
 });
+
+//Registro
+app.get('/registro', (req, res) => {
+  res.render('registro', {
+    error: req.session?.error,
+    success: req.session?.success
+  });
+});
