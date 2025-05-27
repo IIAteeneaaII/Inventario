@@ -18,7 +18,6 @@ const validateRegister = [
     .isLength({ min: 3 }).withMessage('El nombre de usuario debe tener al menos 3 caracteres'),
 
   (req, res, next) => {
-    console.log('body: ', req.body)
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       const mensajes = errors.array().map(err => err.msg).join('-');
@@ -29,14 +28,9 @@ const validateRegister = [
 ];
 
 const validateLogin = [
-  body('email')
-    .notEmpty().withMessage('El correo es obligatorio'),
-
-  body('password')
-    .notEmpty().withMessage('La contraseña es obligatoria'),
-
+  body('email').notEmpty().withMessage('El correo es obligatorio'),
+  body('password').notEmpty().withMessage('La contraseña es obligatoria'),
   (req, res, next) => {
-    console.log('body: ', req.body)
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       const mensajes = errors.array().map(err => err.msg).join(' - ');
@@ -47,12 +41,8 @@ const validateLogin = [
 ];
 
 const validateDeleteAcc = [
-  body('email')
-    .notEmpty().withMessage('Email is required'),
-
-  body('password')
-    .notEmpty().withMessage('Password is required'),
-
+  body('email').notEmpty().withMessage('Email is required'),
+  body('password').notEmpty().withMessage('Password is required'),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

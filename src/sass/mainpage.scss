@@ -257,7 +257,7 @@
     }
 }
 
-.habitos_titulo {
+.titulo {
     text-align: center;
     color: v.$black;
     padding-top: 1rem;
@@ -268,7 +268,7 @@
     }
 }
 
-.habit-toggle {
+.-toggle {
     background-color: v.$white; // más suave
     border-radius: 9999px;
     display: inline-flex;
@@ -278,7 +278,7 @@
     justify-content: space-between;
     gap: 22px;
 
-    .habit-tab {
+    .-tab {
         background-color: v.$white;
         position: relative;
         // background-color: transparent;
@@ -314,14 +314,14 @@
     }
 }
 
-.habit-icon {
+.-icon {
     width: 40px;
     height: 40px;
     margin-right: 14px;
     flex-shrink: 0;
 }
 
-.habit-card {
+.-card {
     background-color: v.$white;
     border-radius: 16px;
     color: v.$black;
@@ -349,7 +349,7 @@
     }
 }
 
-.habit-value-badge {
+.-value-badge {
     background-color: v.$white;
     padding: 6px 14px;
     border-radius: 20px;
