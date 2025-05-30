@@ -9,9 +9,18 @@ exports.findByEmail = async (email) => {
 
 exports.createUser = async (user) => {
   return await prisma.user.create({
-    data: user,
+    data: {
+      email: user.email,
+      password: user.password,
+      userName: user.userName,
+      nombre: user.nombre,   // Aquí pasas el valor real
+      rol: user.rol          //También debe tener valor
+    }
   });
 };
+
+
+
 
 exports.updatePassword = async (email, hashedPassword) => {
   try {

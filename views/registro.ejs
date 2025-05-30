@@ -1,65 +1,113 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="/bootstrap-5.0.2/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="../css/styles.css" rel="stylesheet" />
-  <title>Registro RAM</title>
+  <title>Registro</title>
 </head>
-
 <body>
-  <div class="login-container">
-    <img src="../images/logo_ram.png" alt="Logo RAM" class="logo">
-    <h2 class="text-center mb-4">Registrarse</h2>
+  <h2>Registro de Usuario</h2>
 
-    <form id="formRegistro" action="/api/auth/register" method="POST" autocomplete="off" novalidate>
-      <!-- Usuario -->
-      <div class="mb-3">
-        <label for="userName" class="form-label">Nombre de usuario:</label>
-        <input type="text" class="form-control" id="userName" name="userName" placeholder="Ingresa tu usuario" />
-      </div>
+  <% if (error) { %>
+    <p style="color: red;"><%= error %></p>
+  <% } %>
 
-      <!-- Correo -->
-        <div class="mb-3">
-    <label for="correo" class="form-label">Correo electrónico:</label>
-    <input type="text" class="form-control" id="correo" name="email" placeholder="correo@gmail.com" />
-  </div>
+  <form id="formRegistro">
+    <label>Nombre completo:</label><br />
+    <input type="text" name="nombre" id="nombre" required /><br /><br />
 
-      <!-- Contraseña -->
-      <div class="mb-3">
-        <label for="password" class="form-label">Contraseña:</label>
-        <input type="password" class="form-control" id="password" name="password" placeholder="Ingresa tu contraseña" />
-      </div>
+    <label>Nombre de usuario:</label><br />
+    <input type="text" name="userName" id="userName" required /><br /><br />
 
-      <!-- Confirmar Contraseña -->
-      <div class="mb-3">
-        <label for="confirmarContrasena" class="form-label">Confirmar contraseña:</label>
-        <input type="password" class="form-control" id="confirmarContrasena" name="confirmarContrasena" placeholder="Confirma tu contraseña" />
-      </div>
+    <label>Correo electrónico:</label><br />
+    <input type="email" name="email" id="email" required /><br /><br />
 
-      <!-- Términos -->
-      <div class="form-check mb-3">
-        <input class="form-check-input" type="checkbox" id="terminosCheck" required />
-        <label class="form-check-label" for="terminosCheck">
-          Aceptar <a class="link" href="/terminosyCondiciones">términos y condiciones</a>
-        </label>
-      </div>
+    <label>Contraseña:</label><br />
+    <input type="password" name="password" id="password" required /><br /><br />
 
-      <!-- Botones -->
-      <button type="submit" class="btn btn-success w-100 mb-2">Registrarse</button>
-      <button type="button" class="btn btn-secondary w-100" onclick="history.back()">Cancelar</button>
-    </form>
+    <label>Confirmar contraseña:</label><br />
+    <input type="password" name="confirmarContrasena" id="confirmarContrasena" required /><br /><br />
 
-    <p class="text-end mt-3">
-      ¿Ya tienes cuenta? <a class="link" href="/">Inicia sesión</a>
-    </p>
-  </div>
+    <label>Rol:</label><br />
+    <select name="rol" id="rol" required>
+      <option value="">-- Selecciona un rol --</option>
+      <option value="UAI">UAI</option>
+      <option value="UA">UA</option>
+      <option value="UV">UV</option>
+      <option value="UReg">UReg</option>
+      <option value="UTI">UTI</option>
+      <option value="UR">UR</option>
+      <option value="UC">UC</option>
+      <option value="UE">UE</option>
+      <option value="ULL">ULL</option>
+    </select><br /><br />
 
-  <script src="/bootstrap-5.0.2/js/bootstrap.bundle.min.js"></script>
-  <script src="/js/registro.js"></script>
-  <script src="/js/flashMessage.js"></script>
+    <label>
+      <input type="checkbox" id="terminosCheck" />
+      Acepto los términos y condiciones
+    </label><br /><br />
+
+    <button type="submit">Registrarse</button>
+  </form>
+
+  <script>
+    document.getElementById('formRegistro').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const nombre = document.getElementById('nombre').value;
+      const userName = document.getElementById('userName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmarContrasena = document.getElementById('confirmarContrasena').value;
+      const rol = document.getElementById('rol').value;
+      const terminos = document.getElementById('terminosCheck').checked;
+
+      const emailRegex = /^[^\s@]+@(gmail\.com|hotmail\.com|yahoo\.com|outlook\.com)$/;
+      const userRegex = /^[a-zA-Z0-9]+$/;
+
+      if (!userName || userName.length < 6 || userName.length > 20 || !userRegex.test(userName)) {
+        return alert("El nombre de usuario debe tener entre 6 y 20 caracteres y no contener símbolos.");
+      }
+
+      if (!emailRegex.test(email)) {
+        return alert("El correo debe ser válido y de dominio permitido (gmail, outlook, etc).");
+      }
+
+      if (password.length < 8 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+        return alert("La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.");
+      }
+
+      if (password !== confirmarContrasena) {
+        return alert("Las contraseñas no coinciden.");
+      }
+
+      if (!rol) {
+        return alert("Debes seleccionar un rol.");
+      }
+
+      if (!terminos) {
+        return alert("Debes aceptar los términos y condiciones.");
+      }
+
+      try {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, userName, email, password, confirmarContrasena, rol })
+        });
+
+        const data = await response.text();
+
+        if (response.ok) {
+          alert("Usuario registrado correctamente");
+          window.location.href = '/';
+        } else {
+          alert("Error: " + data);
+        }
+      } catch (err) {
+        alert("Error en la solicitud: " + err.message);
+      }
+    });
+  </script>
 </body>
-
 </html>

@@ -3,25 +3,32 @@ const jwt = require('jsonwebtoken');
 const userRepo = require('../repositories/userRepositoryPrisma'); // ← ya usando Prisma
 
 exports.register = async (req, res) => {
-  const { email, password, userName } = req.body;
+  const { email, nombre, password, userName, rol } = req.body;
+
+  console.log('Datos recibidos en el registro:', req.body); // Asegúrate de que nombre y rol no estén undefined
 
   try {
     const exists = await userRepo.findByEmail(email);
-    if (exists) return res.status(400).json({ msg: 'User already exists' });
+    if (exists) return res.status(400).json({ msg: 'El usuario ya existe' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
+
     await userRepo.createUser({
       email,
+      nombre,            // ← asegurarse que tenga valor
       password: hashedPassword,
       userName,
+      rol                // ← asegurarse que tenga valor
     });
 
-    res.status(201).json({ msg: 'User registered successfully' });
+    console.log('Usuario registrado en DB');
+    res.status(201).json({ msg: 'Usuario registrado correctamente' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Server error' });
+    console.error('Error al registrar usuario:', err);
+    res.status(500).json({ msg: 'Error en el servidor' });
   }
 };
+
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;

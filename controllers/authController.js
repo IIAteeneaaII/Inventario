@@ -19,7 +19,7 @@ const {
 } = userRepo;
 
 exports.register = async (req, res) => {
-  const { email, password, userName } = req.body;
+  const { email, password, userName, nombre, rol } = req.body; // ✅ agregar nombre y rol
 
   try {
     const exists = await userRepo.findByEmail(email);
@@ -29,10 +29,13 @@ exports.register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+
     const user = await userRepo.createUser({
       email,
       password: hashedPassword,
       userName,
+      nombre,  // ✅ ahora definido
+      rol      // ✅ ahora definido
     });
 
     createOrUpdateJob(user.id, 'morning', 8);
@@ -47,6 +50,7 @@ exports.register = async (req, res) => {
     res.redirect('/Registro');
   }
 };
+
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;

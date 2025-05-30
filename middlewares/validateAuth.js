@@ -1,32 +1,60 @@
 const { body, validationResult } = require('express-validator');
 
+// Dominios permitidos
 const allowedDomains = ['gmail.com', 'hotmail.com', 'yahoo.com', 'outlook.com'];
 const domainRegex = new RegExp(`@(${allowedDomains.join('|').replace(/\./g, '\\.')})$`);
 
+// =======================
+// VALIDACIÓN DE REGISTRO
+// =======================
 const validateRegister = [
-  body('email')
-    .isEmail().withMessage('El correo electrónico no es válido')
-    .matches(domainRegex).withMessage(`El correo debe ser de: ${allowedDomains.join(', ')}`),
+//Validar nombre
+  body('nombre')
+  .notEmpty().withMessage('El nombre es obligatorio')
+  .isLength({ min: 2 }).withMessage('El nombre debe tener al menos 2 caracteres'),
 
-  body('password')
-    .isAlphanumeric().withMessage('La contraseña solo debe contener letras y números')
-    .isLength({ min: 8 }).withMessage('La contraseña debe tener al menos 8 caracteres')
-    .isLength({ max: 12 }).withMessage('La contraseña no debe exceder los 12 caracteres'),
-
+  // Validación de nombre de usuario
   body('userName')
     .notEmpty().withMessage('El nombre de usuario es obligatorio')
-    .isLength({ min: 3 }).withMessage('El nombre de usuario debe tener al menos 3 caracteres'),
+    .isLength({ min: 6, max: 20 }).withMessage('Debe tener entre 6 y 20 caracteres')
+    .matches(/^[a-zA-Z0-9]+$/).withMessage('Solo se permiten letras y números'),
 
+  // Validación de correo
+  body('email')
+    .isEmail().withMessage('Correo electrónico inválido')
+    .matches(domainRegex).withMessage(`El correo debe ser de: ${allowedDomains.join(', ')}`),
+
+  // Validación de contraseña
+  body('password')
+    .isLength({ min: 8, max: 12 }).withMessage('Debe tener entre 8 y 12 caracteres')
+    .matches(/[a-z]/).withMessage('Debe contener una minúscula')
+    .matches(/[A-Z]/).withMessage('Debe contener una mayúscula')
+    .matches(/[0-9]/).withMessage('Debe contener un número')
+    .isAlphanumeric().withMessage('Solo se permiten letras y números'),
+
+  // Validación de confirmación de contraseña
+  body('confirmarContrasena')
+    .custom((value, { req }) => value === req.body.password)
+    .withMessage('Las contraseñas no coinciden'),
+
+  // Validación de rol
+  body('rol')
+    .notEmpty().withMessage('Selecciona un rol válido'),
+
+  // Validación final
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      const mensajes = errors.array().map(err => err.msg).join('-');
-      return res.redirect(`/Registro?error=${encodeURIComponent(mensajes)}`);
+      const mensajes = errors.array().map(err => err.msg).join(' - ');
+      return res.redirect(`/registro?error=${encodeURIComponent(mensajes)}`);
     }
     next();
   }
 ];
 
+// ===================
+// VALIDACIÓN DE LOGIN
+// ===================
 const validateLogin = [
   body('email').notEmpty().withMessage('El correo es obligatorio'),
   body('password').notEmpty().withMessage('La contraseña es obligatoria'),
@@ -40,9 +68,12 @@ const validateLogin = [
   }
 ];
 
+// ============================
+// VALIDACIÓN DE ELIMINAR CUENTA
+// ============================
 const validateDeleteAcc = [
-  body('email').notEmpty().withMessage('Email is required'),
-  body('password').notEmpty().withMessage('Password is required'),
+  body('email').notEmpty().withMessage('Email obligatorio'),
+  body('password').notEmpty().withMessage('Contraseña obligatoria'),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
