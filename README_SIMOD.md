@@ -106,8 +106,9 @@ Cada ruta implementa validación de roles y autorización.
 ## Configuración
 
 1. Clonar el repositorio:
+(Ahora se requieren permisos)
 ```bash
-git clone https://github.com/usuario/inventario-simod.git
+git clone https://github.com/IIAteeneaaII/Inventario
 cd inventario-simod
 ```
 
@@ -117,7 +118,7 @@ npm install
 ```
 
 3. Crear archivo `.env` con el siguiente contenido:
-
+hay veces que se guarda como .example
 ```
 DATABASE_URL=postgresql://usuario:contraseña@localhost:5432/simod
 SESSION_SECRET=unasecretasegura
