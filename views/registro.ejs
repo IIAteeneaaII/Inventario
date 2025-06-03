@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Registro</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/just-validate@4.3.0/dist/css/just-validate.css" />
 </head>
 <body>
   <h2>Registro de Usuario</h2>
@@ -43,71 +44,13 @@
     </select><br /><br />
 
     <label>
-      <input type="checkbox" id="terminosCheck" />
-      Acepto los términos y condiciones
+      <input type="checkbox" id="terminosCheck" /> Acepto los términos y condiciones
     </label><br /><br />
 
     <button type="submit">Registrarse</button>
   </form>
 
-  <script>
-    document.getElementById('formRegistro').addEventListener('submit', async function (e) {
-      e.preventDefault();
-
-      const nombre = document.getElementById('nombre').value;
-      const userName = document.getElementById('userName').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const confirmarContrasena = document.getElementById('confirmarContrasena').value;
-      const rol = document.getElementById('rol').value;
-      const terminos = document.getElementById('terminosCheck').checked;
-
-      const emailRegex = /^[^\s@]+@(gmail\.com|hotmail\.com|yahoo\.com|outlook\.com)$/;
-      const userRegex = /^[a-zA-Z0-9]+$/;
-
-      if (!userName || userName.length < 6 || userName.length > 20 || !userRegex.test(userName)) {
-        return alert("El nombre de usuario debe tener entre 6 y 20 caracteres y no contener símbolos.");
-      }
-
-      if (!emailRegex.test(email)) {
-        return alert("El correo debe ser válido y de dominio permitido (gmail, outlook, etc).");
-      }
-
-      if (password.length < 8 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
-        return alert("La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.");
-      }
-
-      if (password !== confirmarContrasena) {
-        return alert("Las contraseñas no coinciden.");
-      }
-
-      if (!rol) {
-        return alert("Debes seleccionar un rol.");
-      }
-
-      if (!terminos) {
-        return alert("Debes aceptar los términos y condiciones.");
-      }
-
-      try {
-        const response = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nombre, userName, email, password, confirmarContrasena, rol })
-        });
-
-        const data = await response.text();
-
-        if (response.ok) {
-          alert("Usuario registrado correctamente");
-          window.location.href = '/';
-        } else {
-          alert("Error: " + data);
-        }
-      } catch (err) {
-        alert("Error en la solicitud: " + err.message);
-      }
-    });
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/just-validate@4.3.0/dist/just-validate.production.min.js"></script>
+  <script src="/js/registro.js"></script>
 </body>
 </html>
