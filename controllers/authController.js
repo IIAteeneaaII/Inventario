@@ -85,7 +85,32 @@ exports.login = async (req, res) => {
       maxAge: 60 * 60 * 1000,
     });
     setFlashMessage(res, '¡Inicio de sesión éxitoso.', 'success');
-    res.redirect('/dashboard');
+    // Redirección según rol
+    switch(user.rol) {
+      case 'UAI':
+          return res.redirect('/adminventario');
+      case 'U.A':
+          return res.redirect('/almacen');
+      case 'U.V':
+          return res.redirect('/visualizacion');
+      case 'U.Reg':
+          return res.redirect('/registro');
+      case 'U.TI':
+          return res.redirect('/testini');
+      case 'U.R':
+          return res.redirect('/reparacion');
+      case 'U.C':
+          return res.redirect('/calidad');
+      case 'U.E':
+          return res.redirect('/empaque');
+      case 'U.LL':
+          return res.redirect('/linealote');
+      default:
+          return res.status(403).render('error', { 
+              message: 'Rol no tiene dashboard asignado' 
+          });
+  }
+  
   } catch (err) {
     console.error(err);
     setFlashMessage(res, 'Hubo un error en el servidor. Intenta más tarde', 'error');
