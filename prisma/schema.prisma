@@ -13,10 +13,10 @@ enum Rol {
   UV // User Visualizador
   UReg // User Registro
   UTI // User Test Inicial
-  UR // User Reparación
-  UC // User Calidad
+  UR // User Retest
+  UC // User Cosmetica
   UE // User Empaque
-  ULL // User Línea de Lote
+  ULL // User Liberacion y limpieza
 }
 
 enum EstadoRegistro {

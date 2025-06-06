@@ -68,20 +68,20 @@ router.get('/testini',
       res.render('dashboard_test_ini', { user: req.user });
   }
 );
-// Dashboard para rol reparacion
+// Dashboard para rol retest
 router.get('/reparacion', 
   verificarAuth,   
   verificarRol(['U.R']), 
   (req, res) => {
-      res.render('dashboard-reparacion', { user: req.user });
+      res.render('dashboard-retest', { user: req.user });
   }
 );
-// Dashboard para rol Calidad 
+// Dashboard para rol Cosmetica
 router.get('/calidad', 
   verificarAuth,   
   verificarRol(['U.C']), 
   (req, res) => {
-      res.render('dashboard_calidad', { user: req.user });
+      res.render('dashboard_cosmetica', { user: req.user });
   }
 );
 // Dashboard para rol Empaque
@@ -92,12 +92,12 @@ router.get('/empaque',
       res.render('dashboard_empaque', { user: req.user });
   }
 );
-// Dashboard para Linea de lote
+// Dashboard para Liberacion y limpieza
 router.get('/linealote', 
   verificarAuth,   
   verificarRol(['U.LL']), 
   (req, res) => {
-      res.render('dashboard-linealote', { user: req.user });
+      res.render('dashboard-liberacion_limpieza', { user: req.user });
   }
 );
 router.post('/deleteAcc', validateDeleteAcc, deleteAccount);
