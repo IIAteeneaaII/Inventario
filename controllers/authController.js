@@ -98,13 +98,13 @@ exports.login = async (req, res) => {
       case 'U.TI':
           return res.redirect('/testini');
       case 'U.R':
-          return res.redirect('/reparacion');
+          return res.redirect('/retest');
       case 'U.C':
-          return res.redirect('/calidad');
+          return res.redirect('/cosmetica');
       case 'U.E':
           return res.redirect('/empaque');
       case 'U.LL':
-          return res.redirect('/linealote');
+          return res.redirect('/lineaLote');
       default:
           return res.status(403).render('error', { 
               message: 'Rol no tiene dashboard asignado' 

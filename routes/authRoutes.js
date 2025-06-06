@@ -69,7 +69,7 @@ router.get('/testini',
   }
 );
 // Dashboard para rol retest
-router.get('/reparacion', 
+router.get('/retest', 
   verificarAuth,   
   verificarRol(['U.R']), 
   (req, res) => {
@@ -77,7 +77,7 @@ router.get('/reparacion',
   }
 );
 // Dashboard para rol Cosmetica
-router.get('/calidad', 
+router.get('/cosmetica', 
   verificarAuth,   
   verificarRol(['U.C']), 
   (req, res) => {
@@ -93,7 +93,7 @@ router.get('/empaque',
   }
 );
 // Dashboard para Liberacion y limpieza
-router.get('/linealote', 
+router.get('/lineaLote', 
   verificarAuth,   
   verificarRol(['U.LL']), 
   (req, res) => {
