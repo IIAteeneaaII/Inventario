@@ -47,7 +47,7 @@ app.get('/', (req, res) => {
 });
 
 // Página de registro
-app.get('/registro', (req, res) => {
+app.get('/regis', (req, res) => {
   res.render('dasboard_registro', {
     error: req.session?.error,
     success: req.session?.success

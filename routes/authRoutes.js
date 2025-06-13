@@ -27,7 +27,8 @@ router.post('/reset-password', resetPassword);
 // ✅ Rutas protegidas (deben ir después del middleware)
 router.use(verificarAuth); // Desde aquí ya debe ir autenticado
 
-// Rutas protegidas (para redirigir a los roles)
+// Rutas protegidas (para redirigir a los roles) 
+
 // Dashboard para rol Admin inventario
 router.get('/adminventario', 
   verificarAuth,   
@@ -53,7 +54,7 @@ router.get('/visualizacion',
   }
 );
 // Dashboard para rol registro
-router.get('/registro', 
+router.get('/regis', 
   verificarAuth,   
   verificarRol(['UReg']), 
   (req, res) => {
