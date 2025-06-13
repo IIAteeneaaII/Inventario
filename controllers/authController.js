@@ -25,7 +25,7 @@ exports.register = async (req, res) => {
     const exists = await userRepo.findByEmail(email);
     if (exists) {
       setFlashMessage(res, 'El usuario ya existe', 'error');
-      return res.redirect('/Registro');
+      return res.redirect('/registro');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -47,7 +47,7 @@ exports.register = async (req, res) => {
   } catch (err) {
     console.error(err);
     setFlashMessage(res, 'Hubo un error en el servidor. Intenta más tarde', 'error');
-    res.redirect('/Registro');
+    res.redirect('/registro');
   }
 };
 
@@ -88,27 +88,25 @@ exports.login = async (req, res) => {
     // Redirección según rol
     switch(user.rol) {
       case 'UAI':
-          return res.redirect('/adminventario');
-      case 'U.A':
-          return res.redirect('/almacen');
-      case 'U.V':
-          return res.redirect('/visualizacion');
-      case 'U.Reg':
-          return res.redirect('/registro');
-      case 'U.TI':
-          return res.redirect('/testini');
-      case 'U.R':
-          return res.redirect('/retest');
-      case 'U.C':
-          return res.redirect('/cosmetica');
-      case 'U.E':
-          return res.redirect('/empaque');
-      case 'U.LL':
-          return res.redirect('/lineaLote');
+          return res.json({ redirectTo: '/adminventario' });
+      case 'UA':
+          return res.json({ redirectTo: '/almacen'});
+      case 'UV':
+          return res.json({ redirectTo: '/visualizacion'});
+      case 'UReg':
+          return res.json({ redirectTo: '/registro'});
+      case 'UTI':
+          return res.json({ redirectTo: '/testini'});
+      case 'UR':
+          return res.json({ redirectTo: '/retest'});
+      case 'UC':
+          return res.json({ redirectTo:'/cosmetica'});
+      case 'UE':
+          return res.json({ redirectTo: '/empaque'});
+      case 'ULL':
+          return res.json({ redirectTo: '/lineaLote'});
       default:
-          return res.status(403).render('error', { 
-              message: 'Rol no tiene dashboard asignado' 
-          });
+          return res.status(403).json
   }
   
   } catch (err) {

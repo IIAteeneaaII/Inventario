@@ -31,7 +31,7 @@ router.use(verificarAuth); // Desde aquí ya debe ir autenticado
 // Dashboard para rol Admin inventario
 router.get('/adminventario', 
   verificarAuth,   
-  verificarRol(['U.UAI']), 
+  verificarRol(['UAI']), 
   (req, res) => {
       res.render('dashboard_admin_inv', { user: req.user });
   }
@@ -39,7 +39,7 @@ router.get('/adminventario',
 // Dashboard para rol almacen
 router.get('/almacen', 
   verificarAuth,   
-  verificarRol(['U.UA']), 
+  verificarRol(['UA']), 
   (req, res) => {
       res.render('dashboard_almacen', { user: req.user });
   }
@@ -47,7 +47,7 @@ router.get('/almacen',
 // Dashboard para rol visualizador
 router.get('/visualizacion', 
   verificarAuth,   
-  verificarRol(['U.UV']), 
+  verificarRol(['UV']), 
   (req, res) => {
       res.render('dashboard_visualizador', { user: req.user });
   }
@@ -55,7 +55,7 @@ router.get('/visualizacion',
 // Dashboard para rol registro
 router.get('/registro', 
   verificarAuth,   
-  verificarRol(['U.Reg']), 
+  verificarRol(['UReg']), 
   (req, res) => {
       res.render('dashboard_registro', { user: req.user });
   }
@@ -63,7 +63,7 @@ router.get('/registro',
 // Dashboard para rol Test inicial
 router.get('/testini', 
   verificarAuth,   
-  verificarRol(['U.TI']), 
+  verificarRol(['UTI']), 
   (req, res) => {
       res.render('dashboard_test_ini', { user: req.user });
   }
@@ -71,7 +71,7 @@ router.get('/testini',
 // Dashboard para rol retest
 router.get('/retest', 
   verificarAuth,   
-  verificarRol(['U.R']), 
+  verificarRol(['UR']), 
   (req, res) => {
       res.render('dashboard-retest', { user: req.user });
   }
@@ -79,7 +79,7 @@ router.get('/retest',
 // Dashboard para rol Cosmetica
 router.get('/cosmetica', 
   verificarAuth,   
-  verificarRol(['U.C']), 
+  verificarRol(['UC']), 
   (req, res) => {
       res.render('dashboard_cosmetica', { user: req.user });
   }
@@ -87,7 +87,7 @@ router.get('/cosmetica',
 // Dashboard para rol Empaque
 router.get('/empaque', 
   verificarAuth,   
-  verificarRol(['U.E']), 
+  verificarRol(['UE']), 
   (req, res) => {
       res.render('dashboard_empaque', { user: req.user });
   }
@@ -95,7 +95,7 @@ router.get('/empaque',
 // Dashboard para Liberacion y limpieza
 router.get('/lineaLote', 
   verificarAuth,   
-  verificarRol(['U.LL']), 
+  verificarRol(['ULL']), 
   (req, res) => {
       res.render('dashboard-liberacion_limpieza', { user: req.user });
   }

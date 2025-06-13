@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const formData = new FormData(form);
     
     try {
-      const response = await fetch('/auth/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -51,9 +51,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const data = await response.json();
       
-      if (!response.ok) {
-        throw new Error(data.error || 'Error en el inicio de sesión');
-      }
+    if (response.ok && data.redirectTo) {
+      window.location.href = data.redirectTo;
+    } else {
+      throw new Error(data.message || 'Error en el inicio de sesión');
+    }
 
       // Guardar token en localStorage
       localStorage.setItem('token', data.token);
@@ -61,14 +63,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Redirigir según el rol
       switch(data.usuario.rol) {
-        case 'U.Reg':
-          window.location.href = '/registros';
+        case 'UAI':
+          window.location.href = '/adminventario';
           break;
-        case 'U.T.I':
-          window.location.href = '/inventario';
+        case 'UA':
+          window.location.href = '/almacen';
           break;
-        case 'U.R':
-          window.location.href = '/reportes';
+        case 'UV':
+          window.location.href = '/visualizacion';
+          break;
+        case 'UReg':
+          window.location.href = '/registro';
+          break;
+        case 'UTI':
+          window.location.href = '/testini';
+          break;
+        case 'UR':
+          window.location.href = '/retest';
+          break;
+        case 'UC':
+          window.location.href = '/cosmetica';
+          break;
+        case 'UE':
+          window.location.href = '/empaque';
+          break;
+        case 'ULL':
+          window.location.href = '/lineaLote';
           break;
         default:
           window.location.href = '/dashboard';

@@ -48,7 +48,7 @@ app.get('/', (req, res) => {
 
 // Página de registro
 app.get('/registro', (req, res) => {
-  res.render('registro', {
+  res.render('dasboard_registro', {
     error: req.session?.error,
     success: req.session?.success
   });
@@ -94,7 +94,7 @@ app.get('/numero-serie-testinicial', verificarAuth, (req, res) => res.render('nu
 // ========== ❌ RUTA DE ERROR GLOBAL ========== //
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).render('error', { message: 'Error en el servidor' });
+  res.status(500).render('error_erro', { message: 'Error en el servidor' });
 });
 
 // ========== 🚀 INICIO DEL SERVIDOR ========== //
