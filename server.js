@@ -107,3 +107,7 @@ app.listen(PORT, HOST, async () => {
     console.error('Error al cargar tareas programadas:', err);
   }
 });
+
+app.listen(3000, '0.0.0.0', () => {
+  console.log('Servidor corriendo en puerto 3000');
+});
