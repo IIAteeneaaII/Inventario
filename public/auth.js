@@ -43,7 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: {
           'Content-Type': 'application/json'
         },
-        credentials: 'include',
         body: JSON.stringify({
           email: formData.get('email'),
           password: formData.get('password')
@@ -62,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.setItem('token', data.token);
       localStorage.setItem('usuario', JSON.stringify(data.usuario));
 
-       // Redirigir según el rol
+      // Redirigir según el rol
       switch(data.usuario.rol) {
         case 'UAI':
           window.location.href = '/adminventario';
