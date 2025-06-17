@@ -53,7 +53,28 @@ app.get('/registro', (req, res) => {
     success: req.session?.success
   });
 });
+// Página de testeo inicial
+app.get('/testini', (req, res) => {
+  res.render('dashboard_test_ini', {
+    error: req.session?.error,
+    success: req.session?.success
+  });
+});
 
+// Página de cosmetica
+app.get('/cosmetica', (req, res) => {
+  res.render('dashboard_cosmetica', {
+    error: req.session?.error,
+    success: req.session?.success
+  });
+});
+// Página de empaque
+app.get('/empaque', (req, res) => {
+  res.render('dashboard_empaque', {
+    error: req.session?.error,
+    success: req.session?.success
+  });
+});
 // Página de términos
 app.get('/TerminosyCondiciones', (req, res) => res.render('terminosyCondiciones'));
 

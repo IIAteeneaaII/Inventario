@@ -96,7 +96,7 @@ exports.login = async (req, res) => {
       case 'UReg':
           return res.json({ redirectTo: '/registro'});
       case 'UTI':
-          return res.json({ redirectTo: '/testini'});
+          return res.redirect('/testini');
       case 'UR':
           return res.json({ redirectTo: '/retest'});
       case 'UC':
