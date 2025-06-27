@@ -14,11 +14,15 @@ router.use(verificarAuth);
 // Middleware para verificar que el usuario tenga el rol 'UAI' (Administrador de Inventario)
 router.use(verificarRol('UAI'));
 
+
+
+//Ruta para registrar un nuevo usuario
+router.post('/usuarios/nuevo', adminController.register)
 // Ruta para listar todos los usuarios registrados
 router.get('/usuarios', adminController.listarUsuarios);
 
 // Ruta para crear un nuevo usuario
-router.post('/usuarios', adminController.crearUsuario);
+router.post('/usuarios', adminController.register);
 
 // Ruta para eliminar un usuario por su ID
 router.delete('/usuarios/:id', adminController.eliminarUsuario);
