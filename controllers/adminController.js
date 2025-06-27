@@ -1,6 +1,63 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const bcrypt = require('bcrypt');
+const userRepo = require('../repositories/userRepositoryPrisma');
+const { createOrUpdateJob } = require('../utils/jobManager');
+
+
+
+//crear un usuario
+exports.register = async (req, res) => {
+  const { email, password, userName, nombre, rol } = req.body; // ✅ agregar nombre y rol
+
+  // Validar que todos los datos estén presentes
+    if (!email || !password || !userName || !nombre || !rol) {
+      return res.status(400).json({ error: 'Faltan datos obligatorios' });
+    }
+
+  try {
+    const exists = await userRepo.findByEmail(email);
+    if (exists) {
+      return res.status(409).json({ error: 'El correo ya está registrado' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await userRepo.createUser({
+      email,
+      password: hashedPassword,
+      userName,
+      nombre,  // ✅ ahora definido
+      rol      // ✅ ahora definido
+    });
+
+    createOrUpdateJob(user.id, 'morning', 8);
+    createOrUpdateJob(user.id, 'afternoon', 13);
+    createOrUpdateJob(user.id, 'night', 21);
+
+    // Registrar la acción en logs
+    await prisma.log.create({
+      data: {
+        usuarioId: req.usuario.id,  // Usuario que hizo la acción
+        accion: 'crear',
+        entidad: 'Usuario',
+        detalle: `Creó usuario ${email}`
+      }
+    });
+
+    // Responder con datos básicos del usuario creado (sin password)
+    res.status(201).json({
+      id: usuario.id,
+      nombre: usuario.nombre,
+      userName: usuario.userName,
+      email: usuario.email,
+      rol: usuario.rol
+    });
+  } catch (error) {
+    console.error('Error crearUsuario:', error);
+    res.status(500).json({ error: 'Error al crear usuario' });
+  }
+};
 
 // Listar todos los usuarios sin mostrar contraseñas
 exports.listarUsuarios = async (req, res) => {
