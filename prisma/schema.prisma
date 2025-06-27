@@ -77,10 +77,3 @@ model Log {
 }
 
 
-model ResetCode {
-  id         Int      @id @default(autoincrement())
-  email      String
-  code       String
-  createdAt  DateTime @default(now())
-  expiresAt  DateTime
-}
