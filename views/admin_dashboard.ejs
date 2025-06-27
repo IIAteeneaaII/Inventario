@@ -41,6 +41,10 @@
         <input type="text" id="nombre" required />
       </div>
       <div class="form-group">
+        <label for="userName">User Name:</label>
+        <input type="text" id="userName" required />
+      </div>
+      <div class="form-group">
         <label for="email">Email:</label>
         <input type="email" id="email" required />
       </div>
@@ -140,14 +144,15 @@
     document.getElementById('formCrearUsuario').addEventListener('submit', async e => {
       e.preventDefault();
       const nombre = document.getElementById('nombre').value.trim();
+      const userName = document.getElementById('userName').value.trim();
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
       const rol = document.getElementById('rol').value;
 
-      const res = await fetch('/admin/usuarios', {
+      const res = await fetch('/admin/usuarios/nuevo', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ nombre, email, password, rol })
+        body: JSON.stringify({ nombre, userName, email, password, rol })
       });
 
       const data = await res.json();
