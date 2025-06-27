@@ -16,6 +16,8 @@ const principalScrRoutes = require('./routes/principalScrRoutes');
 const { verificarAuth, verificarRol } = require('./controllers/authController');
 const { authMiddleware } = require('./middlewares/authMiddleware');
 const { loadAllJobs } = require('./utils/jobManager');
+const viewRoutes = require('./routes/viewRoutes');
+
 
 // Configuración EJS
 app.set('view engine', 'ejs');
@@ -46,35 +48,10 @@ app.get('/', (req, res) => {
   req.session.success = null;
 });
 
-// Página de registro
-app.get('/registro', (req, res) => {
-  res.render('dasboard_registro', {
-    error: req.session?.error,
-    success: req.session?.success
-  });
-});
-// Página de testeo inicial
-app.get('/testini', (req, res) => {
-  res.render('dashboard_test_ini', {
-    error: req.session?.error,
-    success: req.session?.success
-  });
-});
 
-// Página de cosmetica
-app.get('/cosmetica', (req, res) => {
-  res.render('dashboard_cosmetica', {
-    error: req.session?.error,
-    success: req.session?.success
-  });
-});
-// Página de empaque
-app.get('/empaque', (req, res) => {
-  res.render('dashboard_empaque', {
-    error: req.session?.error,
-    success: req.session?.success
-  });
-});
+
+
+
 // Página de términos
 app.get('/TerminosyCondiciones', (req, res) => res.render('terminosyCondiciones'));
 
@@ -82,6 +59,7 @@ app.get('/TerminosyCondiciones', (req, res) => res.render('terminosyCondiciones'
 app.use('/admin', verificarAuth, verificarRol('UAI'), adminRoutes);
 app.use('/api', verificarAuth, inventoryRoutes);
 app.use('/api/inicio', authMiddleware, principalScrRoutes);
+app.use('/', viewRoutes);
 
 // Página dashboard
 app.get('/dashboard', verificarAuth, (req, res) => {
@@ -110,7 +88,6 @@ app.get('/numero-serie-cosmetica', verificarAuth, (req, res) => res.render('nume
 app.get('/numero-serie-empaque', verificarAuth, (req, res) => res.render('numero_serie_empaque'));
 app.get('/numero-serie-liblim', verificarAuth, (req, res) => res.render('numero_serie_liblim'));
 app.get('/numero-serie-retest', verificarAuth, (req, res) => res.render('numero_serie_retest'));
-app.get('/numero-serie-testinicial', verificarAuth, (req, res) => res.render('numero_serie_testinicial'));
 
 // ========== ❌ RUTA DE ERROR GLOBAL ========== //
 app.use((err, req, res, next) => {
