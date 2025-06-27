@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contabilidad de Registros por Lote</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/resumen.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sección del usuario -->
+        <div class="top-right">
+            <img src="images/usuario.webp" alt="Usuario" class="user-icon">
+            <div class="username" id="username-display">Usuario</div>
+        </div>
+        
+        <div class="table-section">
+            <h1>Contabilidad de Registros por Lote</h1>
+            
+            <!-- Selector de lotes -->
+            <div class="lote-selector">
+                <label for="select-lote">Seleccionar Lote:</label>
+                <select id="select-lote">
+                    <option value="">-- Seleccione un lote --</option>
+                    <option value="lote-001">LOTE-001 (Ene 2024)</option>
+                    <option value="lote-002">LOTE-002 (Feb 2024)</option>
+                    <option value="lote-003">LOTE-003 (Mar 2024)</option>
+                    <option value="lote-004">LOTE-004 (Abr 2024)</option>
+                    <option value="lote-005">LOTE-005 (May 2024)</option>
+                </select>
+            </div>
+            
+            <!-- Información del lote seleccionado -->
+            <div class="lote-info" id="lote-info" style="display: none;">
+                <h3>Información del Lote</h3>
+                <p><strong>Fecha de creación:</strong> <span id="lote-fecha">15/05/2024</span></p>
+                <p><strong>Productos:</strong> <span id="lote-productos">Smartphones varios</span></p>
+                <p><strong>Estado:</strong> <span id="lote-estado">En proceso</span></p>
+                <p><strong>Responsable:</strong> <span id="lote-responsable">Juan Pérez</span></p>
+            </div>
+            
+            <div class="table-container">
+                <table class="registros-table">
+                    <thead>
+                        <tr>
+                            <th>Fase del Proceso</th>
+                            <th>S/N</th>
+                            <th>Cosmética</th>
+                            <th>Electrónica</th>
+                            <th>Infestados</th>
+                            <th>Reparaciones</th>
+                            <th>Total Fila</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Fase: Registro -->
+                        <tr data-fase="Registro">
+                            <td>Registro</td>
+                            <td>120</td>
+                            <td>4</td>
+                            <td>5</td>
+                            <td>1</td>
+                            <td>15</td>
+                            <td class="suma-horizontal">145</td>
+                        </tr>
+                        
+                        <!-- Fase: Test Inicial -->
+                        <tr data-fase="Test Inicial">
+                            <td>Test Inicial</td>
+                            <td>120</td>
+                            <td>56</td>
+                            <td>57</td>
+                            <td>221</td>
+                            <td>14</td>
+                            <td class="suma-horizontal">150</td>
+                        </tr>
+                        
+                        <!-- Fase: Cosmética -->
+                        <tr data-fase="Cosmética">
+                            <td>Cosmética</td>
+                            <td>120</td>
+                            <td>56</td>
+                            <td>57</td>
+                            <td>221</td>
+                            <td>14</td>
+                            <td class="suma-horizontal">150</td>
+                        </tr>
+                        
+                        <!-- Fase: Liberación/Limpieza -->
+                        <tr data-fase="Liberación/Limpieza">
+                            <td>Liberación/Limpieza</td>
+                            <td>76</td>
+                            <td>5</td>
+                            <td>89</td>
+                            <td>31</td>
+                            <td>54</td>
+                            <td class="suma-horizontal">115</td>
+                        </tr>
+                        
+                        <!-- Fase: Retest -->
+                        <tr data-fase="Retest">
+                            <td>Retest</td>
+                             <td>120</td>
+                            <td>56</td>
+                            <td>57</td>
+                            <td>221</td>
+                            <td>14</td>
+                            <td class="suma-horizontal">113</td>
+                        </tr>
+                        
+                        <!-- Fase: Empaque -->
+                        <tr data-fase="Empaque">
+                            <td>Empaque</td>
+                             <td>120</td>
+                            <td>56</td>
+                            <td>57</td>
+                            <td>221</td>
+                            <td>14</td>
+                            <td class="suma-horizontal">98</td>
+                        </tr>
+                        
+                        <!-- Total General (suma vertical) -->
+                        <tr class="total-row">
+                            <td><strong>Total General</strong></td>
+                            <td class="suma-vertical">650</td>
+                            <td class="suma-vertical">19</td>
+                            <td class="suma-vertical">15</td>
+                            <td class="suma-vertical">5</td>
+                            <td class="suma-vertical">75</td>
+                            <td class="suma-vertical">764</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Contenedor para las gráficas -->
+            <div class="charts-container" id="charts-container">
+                <!-- Las gráficas se generarán automáticamente aquí -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const username = localStorage.getItem('username') || 'Usuario';
+            document.getElementById('username-display').textContent = username;
+            
+            // Datos de ejemplo para los lotes
+            const lotesData = {
+                'lote-001': {
+                    fecha: '15/01/2024',
+                    productos: 'Smartphones Samsung Galaxy S20',
+                    estado: 'Completado',
+                    responsable: 'María González'
+                },
+                'lote-002': {
+                    fecha: '12/02/2024',
+                    productos: 'Smartphones iPhone 11',
+                    estado: 'Completado',
+                    responsable: 'Carlos Mendoza'
+                },
+                'lote-003': {
+                    fecha: '18/03/2024',
+                    productos: 'Tablets varias marcas',
+                    estado: 'En proceso',
+                    responsable: 'Ana López'
+                },
+                'lote-004': {
+                    fecha: '05/04/2024',
+                    productos: 'Smartphones Xiaomi Redmi Note',
+                    estado: 'En proceso',
+                    responsable: 'Pedro Ramírez'
+                },
+                'lote-005': {
+                    fecha: '22/05/2024',
+                    productos: 'Smartphones varios',
+                    estado: 'En proceso',
+                    responsable: 'Juan Pérez'
+                }
+            };
+            
+            // Manejar cambio de lote
+            document.getElementById('select-lote').addEventListener('change', function() {
+                const loteId = this.value;
+                const loteInfo = document.getElementById('lote-info');
+                
+                if (loteId && lotesData[loteId]) {
+                    // Mostrar información del lote seleccionado
+                    const lote = lotesData[loteId];
+                    document.getElementById('lote-fecha').textContent = lote.fecha;
+                    document.getElementById('lote-productos').textContent = lote.productos;
+                    document.getElementById('lote-estado').textContent = lote.estado;
+                    document.getElementById('lote-responsable').textContent = lote.responsable;
+                    
+                    loteInfo.style.display = 'block';
+                    
+                    // Aquí podrías cargar los datos específicos del lote seleccionado
+                    // Por ahora solo mostramos un mensaje en consola
+                    console.log(`Cargando datos para el lote: ${loteId}`);
+                    
+                    // Actualizar título
+                    const loteNombre = this.options[this.selectedIndex].text.split(' ')[0];
+                    document.querySelector('h1').textContent = `Contabilidad de Registros - ${loteNombre}`;
+                    
+                } else {
+                    loteInfo.style.display = 'none';
+                    document.querySelector('h1').textContent = 'Contabilidad de Registros por Lote';
+                }
+            });
+            
+            // Colores para las gráficas
+            const chartColors = [
+                '#4e79a7', '#f28e2b', '#e15759', '#76b7b2', 
+                '#59a14f', '#edc948', '#b07aa1', '#ff9da7', 
+                '#9c755f', '#bab0ac'
+            ];
+            
+            let charts = {}; // Objeto para almacenar las instancias de gráficas
+            
+            // Inicializar gráficas
+            function initCharts() {
+                const container = document.getElementById('charts-container');
+                container.innerHTML = '';
+                charts = {};
+                
+                const rows = document.querySelectorAll('.registros-table tbody tr:not(.total-row)');
+                
+                rows.forEach(row => {
+                    const fase = row.getAttribute('data-fase');
+                    const cells = row.querySelectorAll('td:not(:first-child):not(:last-child)');
+                    const labels = [];
+                    const data = [];
+                    const backgroundColors = [];
+                    
+                    // Obtener etiquetas de las columnas
+                    const headers = document.querySelectorAll('.registros-table thead th:not(:first-child):not(:last-child)');
+                    
+                    headers.forEach((header, index) => {
+                        labels.push(header.textContent);
+                        const value = parseInt(cells[index].textContent) || 0;
+                        data.push(value);
+                        backgroundColors.push(chartColors[index % chartColors.length]);
+                    });
+                    
+                    // Crear contenedor para la gráfica
+                    const chartBox = document.createElement('div');
+                    chartBox.className = 'chart-box';
+                    
+                    const chartTitle = document.createElement('div');
+                    chartTitle.className = 'chart-title';
+                    chartTitle.textContent = `Distribución: ${fase}`;
+                    
+                    const chartWrapper = document.createElement('div');
+                    chartWrapper.className = 'chart-wrapper';
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.id = `chart-${fase.replace(/\s+/g, '-')}`;
+                    
+                    chartWrapper.appendChild(canvas);
+                    chartBox.appendChild(chartTitle);
+                    chartBox.appendChild(chartWrapper);
+                    container.appendChild(chartBox);
+                    
+                    // Crear la gráfica
+                    const ctx = canvas.getContext('2d');
+                    charts[fase] = new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: data,
+                                backgroundColor: backgroundColors,
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'right',
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.raw || 0;
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = Math.round((value / total) * 100);
+                                            return `${label}: ${value} (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+            
+            // Actualizar datos de las gráficas
+            function updateCharts() {
+                const rows = document.querySelectorAll('.registros-table tbody tr:not(.total-row)');
+                
+                rows.forEach(row => {
+                    const fase = row.getAttribute('data-fase');
+                    const cells = row.querySelectorAll('td:not(:first-child):not(:last-child)');
+                    const data = [];
+                    
+                    cells.forEach(cell => {
+                        data.push(parseInt(cell.textContent) || 0);
+                    });
+                    
+                    if (charts[fase]) {
+                        charts[fase].data.datasets[0].data = data;
+                        charts[fase].update();
+                    }
+                });
+            }
+            
+            // Calcular totales
+            function calculateTotals() {
+                const rows = document.querySelectorAll('.registros-table tbody tr:not(.total-row)');
+                let columnSums = [0, 0, 0, 0, 0, 0]; // Sumas para cada columna
+                
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td:not(:first-child)');
+                    let rowSum = 0;
+                    
+                    cells.forEach((cell, index) => {
+                        const value = parseInt(cell.textContent) || 0;
+                        rowSum += value;
+                        if (index < columnSums.length) {
+                            columnSums[index] += value;
+                        }
+                    });
+                    
+                    // Actualizar total de fila
+                    const totalCell = row.querySelector('td:last-child');
+                    totalCell.textContent = rowSum;
+                    columnSums[columnSums.length - 1] += rowSum;
+                });
+                
+                // Actualizar totales generales
+                const totalRow = document.querySelector('.total-row');
+                if (totalRow) {
+                    const totalCells = totalRow.querySelectorAll('td:not(:first-child)');
+                    totalCells.forEach((cell, index) => {
+                        cell.textContent = columnSums[index];
+                    });
+                }
+            }
+            
+            // Manejar edición de celdas
+            document.querySelectorAll('[contenteditable="true"]').forEach(cell => {
+                cell.addEventListener('blur', function() {
+                    // Validar que el valor sea numérico
+                    if (!/^\d+$/.test(this.textContent)) {
+                        this.textContent = '0';
+                    }
+                    calculateTotals();
+                    updateCharts();
+                });
+                
+                cell.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.blur();
+                    }
+                });
+            });
+            
+            // Inicializar
+            calculateTotals();
+            initCharts();
+        });
+    </script>
+</body>
+</html>

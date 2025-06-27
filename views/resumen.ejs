@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contabilidad de Registros</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/resumen.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sección del usuario -->
+        <div class="top-right">
+            <img src="images/usuario.webp" alt="Usuario" class="user-icon">
+            <div class="username" id="username-display">Usuario</div>
+        </div>
+        
+        <div class="table-section">
+            <h1>Contabilidad de Registros por Fase</h1>
+            
+            <div class="table-container">
+                <table class="registros-table">
+                    <thead>
+                        <tr>
+                            <th>Fase del Proceso</th>
+                            <th>S/N</th>
+                            <th>Cosmética</th>
+                            <th>Electrónica</th>
+                            <th>Infestados</th>
+                            <th>Reparaciones</th>
+                            <th>Total Fila</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Fase: Registro -->
+                        <tr data-fase="Registro">
+                            <td>Registro</td>
+                            <td>120</td>
+                            <td>4</td>
+                            <td>5</td>
+                            <td>1</td>
+                            <td>15</td>
+                            <td class="suma-horizontal">145</td>
+                        </tr>
+
+                        <!-- Fase: Test Inicial -->
+                        <tr data-fase="Test Inicial">
+                            <td>Test Inicial</td>
+                            <td>120</td>
+                            <td>5</td>
+                            <td>6</td>
+                            <td>1</td>
+                            <td>18</td>
+                            <td class="suma-horizontal">150</td>
+                        </tr>
+
+                        <!-- Fase: Cosmética -->
+                        <tr data-fase="Cosmética">
+                            <td>Cosmética</td>
+                            <td>110</td>
+                            <td>6</td>
+                            <td>1</td>
+                            <td>1</td>
+                            <td>25</td>
+                            <td class="suma-horizontal">143</td>
+                        </tr>
+
+                        <!-- Fase: Liberación/Limpieza -->
+                        <tr data-fase="Liberación/Limpieza">
+                            <td>Liberación/Limpieza</td>
+                            <td>105</td>
+                            <td>3</td>
+                            <td>1</td>
+                            <td>1</td>
+                            <td>5</td>
+                            <td class="suma-horizontal">115</td>
+                        </tr>
+
+                        <!-- Fase: Retest -->
+                        <tr data-fase="Retest">
+                            <td>Retest</td>
+                            <td>100</td>
+                            <td>1</td>
+                            <td>1</td>
+                            <td>1</td>
+                            <td>10</td>
+                            <td class="suma-horizontal">113</td>
+                        </tr>
+
+                        <!-- Fase: Empaque -->
+                        <tr data-fase="Empaque">
+                            <td>Empaque</td>
+                            <td>95</td>
+                            <td>0</td>
+                            <td>1</td>
+                            <td>0</td>
+                            <td>2</td>
+                            <td class="suma-horizontal">98</td>
+                        </tr>
+
+                        <!-- Total General (suma vertical) -->
+                        <tr class="total-row">
+                            <td><strong>Total General</strong></td>
+                            <td class="suma-vertical">650</td>
+                            <td class="suma-vertical">19</td>
+                            <td class="suma-vertical">15</td>
+                            <td class="suma-vertical">5</td>
+                            <td class="suma-vertical">75</td>
+                            <td class="suma-vertical">764</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const username = localStorage.getItem('username') || 'Usuario';
+            document.getElementById('username-display').textContent = username;
+            
+            // Colores para las gráficas
+            const chartColors = [
+                '#4e79a7', '#f28e2b', '#e15759', '#76b7b2', 
+                '#59a14f', '#edc948', '#b07aa1', '#ff9da7', 
+                '#9c755f', '#bab0ac'
+            ];
+            
+            
+            // Calcular totales
+            function calculateTotals() {
+                const rows = document.querySelectorAll('.registros-table tbody tr:not(.total-row)');
+                let columnSums = [0, 0, 0, 0, 0, 0]; // Sumas para cada columna
+                
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td:not(:first-child)');
+                    let rowSum = 0;
+                    
+                    cells.forEach((cell, index) => {
+                        const value = parseInt(cell.textContent) || 0;
+                        rowSum += value;
+                        if (index < columnSums.length) {
+                            columnSums[index] += value;
+                        }
+                    });
+                    
+                    // Actualizar total de fila
+                    const totalCell = row.querySelector('td:last-child');
+                    totalCell.textContent = rowSum;
+                    columnSums[columnSums.length - 1] += rowSum;
+                });
+                
+                // Actualizar totales generales
+                const totalRow = document.querySelector('.total-row');
+                if (totalRow) {
+                    const totalCells = totalRow.querySelectorAll('td:not(:first-child)');
+                    totalCells.forEach((cell, index) => {
+                        cell.textContent = columnSums[index];
+                    });
+                }
+            }
+            
+            // Manejar edición de celdas
+            document.querySelectorAll('[contenteditable="true"]').forEach(cell => {
+                cell.addEventListener('blur', function() {
+                    // Validar que el valor sea numérico
+                    if (!/^\d+$/.test(this.textContent)) {
+                        this.textContent = '0';
+                    }
+                    calculateTotals();
+                    updateCharts();
+                });
+                
+                cell.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.blur();
+                    }
+                });
+            });
+            
+            // Inicializar
+            calculateTotals();
+            initCharts();
+        });
+    </script>
+</body>
+</html>
