@@ -3,7 +3,6 @@ const router = express.Router();
 
 const adminController = require('../controllers/adminController');
 const {
-  register,
   login, // es correcto que esta ruta este para permisos de admin?
   logout, 
   recoverPassword,
@@ -18,15 +17,14 @@ const {
 const { validateRegister, validateLogin, validateDeleteAcc } = require('../middlewares/validateAuth');
 
 // ✅ Rutas públicas (NO deben requerir autenticación)
-router.post('/register', validateRegister, register);
 router.post('/login', validateLogin, login);
 router.post('/recover-password', recoverPassword);
 router.post('/validate-reset-token', validateResetToken);
 router.post('/reset-password', resetPassword);
 
+
 // ✅ Rutas protegidas (deben ir después del middleware)
 router.use(verificarAuth); // Desde aquí ya debe ir autenticado
-
 
 router.post('/deleteAcc', validateDeleteAcc, deleteAccount);
 router.get('/logout', logout);
