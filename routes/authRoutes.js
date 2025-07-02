@@ -3,6 +3,7 @@ const router = express.Router();
 
 const adminController = require('../controllers/adminController');
 const {
+  registrar,
   login, // es correcto que esta ruta este para permisos de admin?
   logout, 
   recoverPassword,
@@ -21,6 +22,7 @@ router.post('/login', validateLogin, login);
 router.post('/recover-password', recoverPassword);
 router.post('/validate-reset-token', validateResetToken);
 router.post('/reset-password', resetPassword);
+router.post('/registro_prueba', validateRegister, registrar);
 
 
 // ✅ Rutas protegidas (deben ir después del middleware)

@@ -35,7 +35,7 @@ router.get('/registro',
   verificarAuth,   
   verificarRol('UReg'), 
   (req, res) => {
-      res.render('dashboard_registro', { user: req.user });
+      res.render('dashboard_registros', { user: req.user });
   }
 );
 // Dashboard para rol Test inicial

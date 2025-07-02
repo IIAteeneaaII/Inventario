@@ -69,6 +69,14 @@ app.get('/dashboard', verificarAuth, (req, res) => {
   res.render('dashboard', { usuario: req.user });
 });
 
+// Página de registro para pruebas 
+app.get('/registro_prueba', (req, res) => {
+  res.render('dasboard_registro', {
+    error: req.session?.error,
+    success: req.session?.success
+  });
+});
+
 // ========== ✅ VISTAS SECUNDARIAS PROTEGIDAS ========== //
 app.get('/EliminarCuenta', authMiddleware, (req, res) => res.render('eliminarCuenta'));
 app.get('/EliminarCuenta1', authMiddleware, (req, res) => res.render('eliminarCuenta1'));
@@ -82,12 +90,7 @@ app.get('/consulta-ns-admin', verificarAuth, (req, res) => res.render('consulta_
 app.get('/seleccion-lote-admin', verificarAuth, (req, res) => res.render('seleccion_lote_admin'));
 app.get('/seleccion-lote', verificarAuth, (req, res) => res.render('seleccion_lote'));
 
-// ========== ✅ VISTAS DE ÁREAS OPERATIVAS ========== //
-app.get('/numero-serie-registro', verificarAuth, (req, res) => res.render('numero_serie_registro'));
-app.get('/numero-serie-cosmetica', verificarAuth, (req, res) => res.render('numero_serie_cosmetica'));
-app.get('/numero-serie-empaque', verificarAuth, (req, res) => res.render('numero_serie_empaque'));
-app.get('/numero-serie-liblim', verificarAuth, (req, res) => res.render('numero_serie_liblim'));
-app.get('/numero-serie-retest', verificarAuth, (req, res) => res.render('numero_serie_retest'));
+
 
 // ========== ❌ RUTA DE ERROR GLOBAL ========== //
 app.use((err, req, res, next) => {
