@@ -47,7 +47,7 @@ validator
     };
 
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch('/api/auth/registro_prueba', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
