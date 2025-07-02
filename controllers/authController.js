@@ -84,6 +84,39 @@ exports.login = async (req, res) => {
   }
 };
 
+exports.registrar = async (req, res) => {
+  const { email, password, userName, nombre, rol } = req.body; // ✅ agregar nombre y rol
+
+  try {
+    const exists = await userRepo.findByEmail(email);
+    if (exists) {
+      setFlashMessage(res, 'El usuario ya existe', 'error');
+      return res.redirect('/registro_prueba');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await userRepo.createUser({
+      email,
+      password: hashedPassword,
+      userName,
+      nombre,  // ✅ ahora definido
+      rol      // ✅ ahora definido
+    });
+
+    createOrUpdateJob(user.id, 'morning', 8);
+    createOrUpdateJob(user.id, 'afternoon', 13);
+    createOrUpdateJob(user.id, 'night', 21);
+
+    setFlashMessage(res, '¡Registro exitoso! Ya puedes iniciar sesión.', 'success');
+    res.redirect('/');
+  } catch (err) {
+    console.error(err);
+    setFlashMessage(res, 'Hubo un error en el servidor. Intenta más tarde', 'error');
+    res.redirect('/registro_prueba');
+  }
+};
+
 exports.deleteAccount = async (req, res) => {
   const { email, password } = req.body;
 
