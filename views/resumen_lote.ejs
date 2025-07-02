@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contabilidad de Registros por Lote</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/resumen.css">
+    <link rel="stylesheet" href="/public/css/resumen.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -46,12 +46,12 @@
                     <thead>
                         <tr>
                             <th>Fase del Proceso</th>
-                            <th>S/N</th>
-                            <th>Cosmética</th>
-                            <th>Electrónica</th>
-                            <th>Infestados</th>
+                            <th>S/N OK</th>
+                            <th>Cosmética Scrap</th>
+                            <th>Electrónica Scrap</th>
+                            <th>Infestados Scrap</th>
                             <th>Reparaciones</th>
-                            <th>Total Fila</th>
+                            <th>Total</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -250,7 +250,7 @@
                     
                     const chartTitle = document.createElement('div');
                     chartTitle.className = 'chart-title';
-                    chartTitle.textContent = `Distribución: ${fase}`;
+                    chartTitle.textContent = ` ${fase}`;
                     
                     const chartWrapper = document.createElement('div');
                     chartWrapper.className = 'chart-wrapper';
