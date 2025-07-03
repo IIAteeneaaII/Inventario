@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/main/css/admin.css">
+  <title>Panel Administrador - Gestión de Usuarios</title>
+</head>
+<body>
+  <div class="admin-container">
+    <div class="user-header">
+      <div>
+        <h1>Panel Administrador</h1>
+        <p>Gestión de usuarios del sistema</p>
+      </div>
+      <div class="user-info">
+        <div class="user-icon">A</div>
+        <div>
+          <div class="username">Administrador</div>
+          <div class="user-role">Rol: UAI</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mensaje-container"></div>
+
+    <section id="listaUsuarios">
+      <h2>Usuarios registrados</h2>
+      
+      <div class="table-container">
+        <table class="usuarios-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="usuariosTableBody">
+            <!-- Usuarios cargados dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="crearUsuario" class="form-section">
+      <h2>Crear nuevo usuario</h2>
+      
+      <form id="formCrearUsuario">
+        <div class="input-group">
+          <label for="nombre">Nombre completo:</label>
+          <input type="text" id="nombre" required placeholder="Ingrese el nombre completo" />
+        </div>
+        
+        <div class="input-group">
+          <label for="userName">Nombre de usuario:</label>
+          <input type="text" id="userName" required placeholder="Ingrese nombre de usuario" />
+        </div>
+        
+        <div class="input-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" required placeholder="ejemplo@empresa.com" />
+        </div>
+        
+        <div class="input-group">
+          <label for="password">Contraseña:</label>
+          <input type="password" id="password" required placeholder="Mínimo 8 caracteres" minlength="8" />
+        </div>
+        
+        <div class="input-group">
+          <label for="rol">Rol:</label>
+          <select id="rol" required>
+            <option value="">Selecciona un rol</option>
+            <option value="UAI">Administrador (UAI)</option>
+            <option value="UReg">Registro (UReg)</option>
+            <option value="UTI">Test Inicial (UTI)</option>
+            <option value="UC">Calidad (UC)</option>
+            <option value="ULL">Liberación y Limpieza (ULL)</option>
+            <option value="UR">Re-Test (UR)</option>
+            <option value="UE">Empaque (UE)</option>
+          </select>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-submit">
+          <span class="btn-icon">+</span> Crear usuario
+        </button>
+      </form>
+    </section>
+  </div>
+
+  <!-- Modal para editar usuario -->
+  <div id="modalEditar">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Editar usuario</h3>
+      </div>
+      
+      <form id="formEditarUsuario">
+        <input type="hidden" id="editarId" />
+        
+        <div class="input-group">
+          <label for="editarNombre">Nombre:</label>
+          <input type="text" id="editarNombre" required />
+        </div>
+        
+        <div class="input-group">
+          <label for="editarEmail">Email:</label>
+          <input type="email" id="editarEmail" required />
+        </div>
+        
+        <div class="input-group">
+          <label for="editarRol">Rol:</label>
+          <select id="editarRol" required>
+            <option value="">Selecciona rol</option>
+            <option value="UAI">Administrador (UAI)</option>
+            <option value="UReg">Registro (UReg)</option>
+            <option value="UTI">Test Inicial (UTI)</option>
+            <option value="UC">Calidad (UC)</option>
+            <option value="ULL">Liberación y Limpieza (ULL)</option>
+            <option value="UR">Re-Test (UR)</option>
+            <option value="UE">Empaque (UE)</option>
+          </select>
+        </div>
+        
+        <div class="modal-buttons">
+          <button type="submit" class="btn btn-primary">
+            <span class="btn-icon">💾</span> Guardar
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="cerrarModal()">
+            <span class="btn-icon">✕</span> Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Base de datos simulada de usuarios
+    let usuarios = [
+      { id: 1, nombre: "Ana López", userName: "ana", email: "ana.lopez@empresa.com", rol: "UAI" },
+      { id: 2, nombre: "Carlos Mendoza", userName: "carlos", email: "carlos.m@empresa.com", rol: "UReg" },
+      { id: 3, nombre: "María Torres", userName: "maria", email: "maria.t@empresa.com", rol: "UTI" },
+      { id: 4, nombre: "Jorge Ramírez", userName: "jorge", email: "jorge.r@empresa.com", rol: "UC" }
+    ];
+    
+    let nextId = 5; // ID para el próximo usuario
+    
+    // Función para mostrar mensajes de estado
+    function mostrarMensaje(texto, tipo) {
+      const contenedor = document.getElementById('mensaje-container');
+      contenedor.innerHTML = `<div class="status-message ${tipo}">${texto}</div>`;
+      
+      // Eliminar el mensaje después de 3 segundos
+      setTimeout(() => {
+        contenedor.innerHTML = '';
+      }, 3000);
+    }
+    
+    // Función para renderizar la tabla de usuarios
+    function renderizarTabla() {
+      const tbody = document.getElementById('usuariosTableBody');
+      tbody.innerHTML = '';
+      
+      usuarios.forEach(usuario => {
+        const rolTexto = obtenerTextoRol(usuario.rol);
+        const tr = document.createElement('tr');
+        tr.dataset.id = usuario.id;
+        tr.innerHTML = `
+          <td>${usuario.id}</td>
+          <td>${usuario.nombre}</td>
+          <td>${usuario.email}</td>
+          <td><span class="rol-tag">${rolTexto}</span></td>
+          <td>
+            <button class="acciones-btn" onclick="abrirModal(${usuario.id})">✏️ Editar</button>
+            <button class="acciones-btn" onclick="eliminarUsuario(${usuario.id})">🗑️ Eliminar</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    
+    // Función para obtener el texto descriptivo del rol
+    function obtenerTextoRol(codigoRol) {
+      const roles = {
+        'UAI': 'Administrador (UAI)',
+        'UReg': 'Registro (UReg)',
+        'UTI': 'Test Inicial (UTI)',
+        'UC': 'Calidad (UC)',
+        'ULL': 'Liberación y Limpieza (ULL)',
+        'UR': 'Re-Test (UR)',
+        'UE': 'Empaque (UE)'
+      };
+      return roles[codigoRol] || codigoRol;
+    }
+    
+    // Función para crear un nuevo usuario
+    function crearUsuario() {
+      const nombre = document.getElementById('nombre').value;
+      const userName = document.getElementById('userName').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const rol = document.getElementById('rol').value;
+      
+      // Validación básica
+      if (!nombre || !userName || !email || !password || !rol) {
+        mostrarMensaje('Por favor, complete todos los campos', 'error');
+        return;
+      }
+      
+      // Crear nuevo usuario
+      const nuevoUsuario = {
+        id: nextId++,
+        nombre,
+        userName,
+        email,
+        rol
+      };
+      
+      // Agregar a la lista
+      usuarios.push(nuevoUsuario);
+      
+      // Actualizar la tabla
+      renderizarTabla();
+      
+      // Mostrar mensaje de éxito
+      mostrarMensaje(`Usuario "${nombre}" creado exitosamente`, 'success');
+      
+      // Resetear el formulario
+      document.getElementById('formCrearUsuario').reset();
+      
+      // Destacar el nuevo usuario en la tabla
+      const newRow = document.querySelector(`tr[data-id="${nuevoUsuario.id}"]`);
+      newRow.classList.add('highlight');
+      
+      // Quitar el resaltado después de la animación
+      setTimeout(() => {
+        newRow.classList.remove('highlight');
+      }, 2000);
+    }
+    
+    // Función para eliminar un usuario
+    function eliminarUsuario(id) {
+      if (confirm(`¿Estás seguro de que deseas eliminar al usuario #${id}?`)) {
+        // Buscar el índice del usuario
+        const index = usuarios.findIndex(u => u.id === id);
+        
+        if (index !== -1) {
+          const nombreUsuario = usuarios[index].nombre;
+          
+          // Eliminar el usuario
+          usuarios.splice(index, 1);
+          
+          // Actualizar la tabla
+          renderizarTabla();
+          
+          // Mostrar mensaje de éxito
+          mostrarMensaje(`Usuario "${nombreUsuario}" eliminado exitosamente`, 'success');
+        }
+      }
+    }
+    
+    // Funciones para manejar el modal de edición
+    function abrirModal(userId) {
+      const usuario = usuarios.find(u => u.id === userId);
+      
+      if (usuario) {
+        document.getElementById('editarId').value = usuario.id;
+        document.getElementById('editarNombre').value = usuario.nombre;
+        document.getElementById('editarEmail').value = usuario.email;
+        document.getElementById('editarRol').value = usuario.rol;
+        document.getElementById('modalEditar').style.display = 'flex';
+      }
+    }
+    
+    function cerrarModal() {
+      document.getElementById('modalEditar').style.display = 'none';
+    }
+    
+    // Función para guardar los cambios de edición
+    function guardarEdicion() {
+      const id = parseInt(document.getElementById('editarId').value);
+      const nombre = document.getElementById('editarNombre').value;
+      const email = document.getElementById('editarEmail').value;
+      const rol = document.getElementById('editarRol').value;
+      
+      // Buscar el usuario
+      const usuario = usuarios.find(u => u.id === id);
+      
+      if (usuario) {
+        // Actualizar los datos
+        usuario.nombre = nombre;
+        usuario.email = email;
+        usuario.rol = rol;
+        
+        // Actualizar la tabla
+        renderizarTabla();
+        
+        // Mostrar mensaje de éxito
+        mostrarMensaje(`Usuario "${nombre}" actualizado exitosamente`, 'success');
+        
+        // Cerrar el modal
+        cerrarModal();
+      }
+    }
+    
+    // Eventos al cargar la página
+    document.addEventListener('DOMContentLoaded', () => {
+      // Renderizar la tabla inicial
+      renderizarTabla();
+      
+      // Asignar evento al formulario de creación
+      document.getElementById('formCrearUsuario').addEventListener('submit', (e) => {
+        e.preventDefault();
+        crearUsuario();
+      });
+      
+      // Asignar evento al formulario de edición
+      document.getElementById('formEditarUsuario').addEventListener('submit', (e) => {
+        e.preventDefault();
+        guardarEdicion();
+      });
+      
+      // Cerrar modal al hacer clic fuera del contenido
+      document.getElementById('modalEditar').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('modalEditar')) {
+          cerrarModal();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
