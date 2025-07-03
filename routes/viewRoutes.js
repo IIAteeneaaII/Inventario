@@ -35,7 +35,7 @@ router.get('/registro',
   verificarAuth,   
   verificarRol('UReg'), 
   (req, res) => {
-      res.render('dashboard_registros', { user: req.user });
+      res.render('registro_lote', { user: req.user });
   }
 );
 // Dashboard para rol Test inicial
@@ -43,7 +43,7 @@ router.get('/testini',
   verificarAuth,   
   verificarRol('UTI'), 
   (req, res) => {
-      res.render('dashboard_test_ini', { user: req.user });
+      res.render('seleccion_lote', { user: req.user });
   }
 );
 // Dashboard para rol retest
@@ -51,7 +51,7 @@ router.get('/retest',
   verificarAuth,   
   verificarRol('UR'), 
   (req, res) => {
-      res.render('dashboard-retest', { user: req.user });
+      res.render('seleccion_lote', { user: req.user });
   }
 );
 // Dashboard para rol Cosmetica
@@ -59,7 +59,7 @@ router.get('/cosmetica',
   verificarAuth,   
   verificarRol('UC'), 
   (req, res) => {
-      res.render('dashboard_cosmetica', { user: req.user });
+      res.render('seleccion_lote', { user: req.user });
   }
 );
 // Dashboard para rol Empaque
@@ -67,7 +67,7 @@ router.get('/empaque',
   verificarAuth,   
   verificarRol('UE'), 
   (req, res) => {
-      res.render('dashboard_empaque', { user: req.user });
+      res.render('seleccion_lote', { user: req.user });
   }
 );
 // Dashboard para Liberacion y limpieza
@@ -75,7 +75,7 @@ router.get('/lineaLote',
   verificarAuth,   
   verificarRol('ULL'), 
   (req, res) => {
-      res.render('dashboard-liberacion_limpieza', { user: req.user });
+      res.render('seleccion_lote', { user: req.user });
   }
 );
 module.exports = router;
