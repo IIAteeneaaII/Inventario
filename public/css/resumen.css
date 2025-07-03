@@ -384,3 +384,68 @@ input[type="text"]:focus, select:focus {
         .lote-info strong {
             color: #365a66;
         }
+    /*AQUI VA SWEETALERT*/
+        .swal2-popup {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .swal2-title {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .swal2-confirm {
+            background-color: #2ecc71 !important;
+            border: none !important;
+            border-radius: 6px !important;
+            padding: 10px 25px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .swal2-confirm:hover {
+            background-color: #27ae60 !important;
+            transform: translateY(-2px) !important;
+        }
+        
+        .swal2-cancel {
+            background-color: #95a5a6 !important;
+            border: none !important;
+            border-radius: 6px !important;
+            padding: 10px 25px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .swal2-cancel:hover {
+            background-color: #7f8c8d !important;
+            transform: translateY(-2px) !important;
+        }
+        
+        /* Estilos para los tags de motivo en la tabla */
+        .motivo-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .motivo-cosmetica {
+            background-color: #ffeaa7;
+            color: #d35400;
+        }
+        
+        .motivo-electronica {
+            background-color: #a29bfe;
+            color: #2d3436;
+        }
+        
+        .motivo-infestado {
+            background-color: #fab1a0;
+            color: #c23616;
+        }
