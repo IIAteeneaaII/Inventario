@@ -160,3 +160,102 @@ npx prisma migrate dev --name init
 - El sistema es **escalable** y permite agregar nuevas áreas o procesos sin modificar la estructura base.
 - Compatible con más de **100,000 registros** manteniendo el rendimiento.
 - Se pueden agregar futuras integraciones como **notificaciones por correo** o **modo offline**.
+
+
+# Resumen de Estilos CSS Reutilizables
+
+## Variables Globales (`:root`)
+
+Estas variables permiten centralizar la identidad visual del sistema.
+
+```css
+--color-primario:         #66b3b7;
+--color-primario-oscuro:  #4e8c8f;
+--color-secundario:       #2c3e50;
+--color-fondo:            #365a66;
+--color-fondo-claro:      #f4f4f9;
+--color-texto:            #333333;
+--color-texto-claro:      #ffffff;
+--color-borde:            #e2e8f0;
+--color-error:            #e53e3e;
+--color-exito:            #38a169;
+--sombra:                 0 4px 6px rgba(0,0,0,0.1);
+--radio-borde:            8px;
+```
+
+## Estilos Base
+
+### `body`
+- Fuente principal: Arial, sans-serif.
+- Fondo: `#365a66`.
+- Color de texto: gris oscuro (`#333`).
+- Altura mínima: `100vh`.
+- Sin margen ni padding.
+
+### `.app-container`
+- Contenedor flexible vertical.
+- Altura completa del viewport.
+- Fondo gris claro (`#f5f5f5`).
+
+## Componentes Reutilizables
+
+### `swalConfig.js` (SweetAlert2)
+Configuración global reutilizable para todas las alertas:
+- Colores predeterminados:
+  - Confirmación: `#3085d6`, clase `btn btn-success`.
+  - Cancelación: `#d33`, clase `btn btn-danger`.
+- `allowOutsideClick: false`: evita cerrar por clic externo.
+- Tipografía y estilo coherente con la interfaz.
+
+## Layouts y Contenedores
+
+- `.admin-container`: tarjeta blanca central con sombra y bordes redondeados.
+- `.form-section` y `.table-section`: estructura de paneles laterales.
+- `.app-header`: encabezado fijo con fondo oscuro y sombra.
+- `.top-right` / `.user-profile`: muestra avatar y nombre de usuario.
+
+## Tablas
+
+- `.registros-table`, `.usuarios-table`, `.lotes-table`: tablas modernas con:
+  - Encabezados fijos (`position: sticky`)
+  - Hover destacado.
+  - Bordes redondeados y sombreado.
+- `.estado-activo` / `.estado-inactivo`: etiquetas verde/rojo.
+- `.selected-row`: fila seleccionada con fondo verde claro.
+
+## Búsqueda y Filtros
+
+- `.search-bar`, `.search-input`, `.search-btn`:
+  - Entrada y botón alineados.
+  - Botón con color institucional (`#66b3b7`) y transición hover.
+
+## Formularios
+
+- `.form-group`, `.input-group`: agrupaciones limpias y alineadas.
+- Inputs y selects con bordes suaves y foco con sombra.
+- `.btn`, `.btn-primary`, `.btn-secondary`, `.btn-submit`:
+  - Botones con transiciones suaves y colores coherentes.
+  - Hover con efectos visuales sutiles.
+
+## Etiquetas de Motivo (`.motivo-tag`)
+Etiquetas visuales con colores personalizados según tipo:
+
+| Clase               | Color de fondo        |
+|--------------------|------------------------|
+| `.motivo-cosmetica` | Amarillo claro         |
+| `.motivo-electronica` | Morado o azul violeta |
+| `.motivo-infestado` | Rojo o coral claro     |
+
+## Otros Elementos
+
+- `.pagination`, `.pagination-btn`: paginación centrada con hover animado.
+- `.actions-bar`: barra inferior fija con botones principales.
+- `.charts-container`: envoltorio de gráficas con distribución responsive.
+- `.required::after`: asterisco rojo para campos obligatorios.
+
+## Diseño Responsivo
+
+- `@media (max-width: 768px)`:
+  - `.app-container`: cambia a layout de columna.
+  - Se ajustan márgenes, padding, scroll vertical.
+  - Se adapta encabezado y contenido para móviles.
