@@ -54,28 +54,19 @@ exports.login = async (req, res) => {
     });
     setFlashMessage(res, '¡Inicio de sesión éxitoso.', 'success');
     // Redirección según rol
-    switch(user.rol) {
+    const rolesSeleccionLote = ['UA', 'UV', 'UTI', 'UR', 'UC', 'UE', 'ULL'];
+    switch (user.rol) {
       case 'UAI':
-          return res.json({ redirectTo: '/adminventario' });
-      case 'UA':
-          return res.json({ redirectTo: '/almacen'});
-      case 'UV':
-          return res.json({ redirectTo: '/visualizacion'});
+        return res.json({ redirectTo: '/adminventario' });
       case 'UReg':
-          return res.json({ redirectTo: '/registro'});
-      case 'UTI':
-          return res.json({ redirectTo: '/testini'});
-      case 'UR':
-          return res.json({ redirectTo: '/retest'});
-      case 'UC':
-          return res.json({ redirectTo:'/cosmetica'});
-      case 'UE':
-          return res.json({ redirectTo: '/empaque'});
-      case 'ULL':
-          return res.json({ redirectTo: '/lineaLote'});
+        return res.json({ redirectTo: '/registro' });
       default:
-          return res.status(403).json
-  }
+        if (rolesSeleccionLote.includes(user.rol)) {
+          return res.json({ redirectTo: '/seleccionlote' });
+        } else {
+          return res.status(403).json({ error: 'Rol no autorizado' });
+        }
+    }
   
   } catch (err) {
     console.error(err);
@@ -213,15 +204,16 @@ exports.verificarAuth = (req, res, next) => {
   }
 };
 
-exports.verificarRol = (rolEsperado) => {
+exports.verificarRol = (rolesEsperados) => {
   return (req, res, next) => {
     const user = req.user;
-    if (!user || user.rol !== rolEsperado) {
+    if (!user || !rolesEsperados.includes(user.rol)) {
       return res.status(403).send('Acceso denegado');
     }
     next();
   };
 };
+
 
 // Placeholder para actualizar perfil
 exports.updateProfile = (req, res) => {
