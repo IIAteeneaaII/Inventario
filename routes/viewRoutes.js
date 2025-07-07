@@ -9,11 +9,28 @@ const { authMiddleware } = require('../middlewares/authMiddleware');
 // Dashboard para rol Admin inventario
 router.get('/adminventario', 
   verificarAuth,   
-  verificarRol('UAI'), 
+  verificarRol(['UAI']), 
   (req, res) => {
       res.render('admin_dashboard', { user: req.user });
   }
 );
+// Dashboard para rol registro
+router.get('/registro', 
+  verificarAuth,   
+  verificarRol(['UReg']), 
+  (req, res) => {
+      res.render('registro_lote', { user: req.user });
+  }
+);
+router.get('/seleccionlote', 
+  verificarAuth,   
+  verificarRol(['UA', 'UV', 'UTI', 'UR', 'UC', 'UE', 'ULL','UReg']), 
+  (req, res) => {
+      console.log(`Acceso autorizado: ${req.user.userName} (${req.user.rol}) -> /seleccionlote`);
+      res.render('seleccion_lote', { user: req.user });
+  }
+);
+
 // Dashboard para rol almacen
 router.get('/almacen', 
   verificarAuth,   
@@ -30,12 +47,12 @@ router.get('/visualizacion',
       res.render('dashboard_visualizador', { user: req.user });
   }
 );
-// Dashboard para rol registro
-router.get('/registro', 
-  verificarAuth,   
-  verificarRol('UReg'), 
+
+// Dashboard para redireccionamiento a la vista de crear lote
+router.get('/crearlote', 
+   
   (req, res) => {
-      res.render('registro_lote', { user: req.user });
+      res.render('asignacion_lote', { user: req.user });
   }
 );
 // Dashboard para rol Test inicial
