@@ -6,7 +6,7 @@
     <title>Fase Registro</title>
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <!-- Usuario en esquina superior derecha -->
@@ -16,27 +16,45 @@
     </div>
 
     <div class="login-container">
-    <!-- Contenido principal centrado -->
-    <div class="container">
-        <div class="title-container">
-            <h5>Fase Registro</h5>
-            <h2>Registro de Nuevo Lote</h2>
-        </div>
-        
-        <div class="button-container">
-            <!-- Botón con enlace GET -->
-            <a href="/crearlote" class="btn-custom">
-                <span class="btn-icon">+</span>
-                <span>Crear nuevo lote</span>
-            </a>
+        <!-- Contenido principal centrado -->
+        <div class="container">
+            <div class="title-container">
+                <h5>Fase Registro</h5>
+                <h2>Registro de Nuevo Lote</h2>
+            </div>
             
-            <a href="/seleccionlote" class="btn-custom">
-                <span class="btn-icon">-</span>
-                <span>Seleccionar lote existente</span>
-            </a>    
+            <div class="button-container">
+                <!-- Botón con enlace GET -->
+                <a href="/crearlote" class="btn-custom">
+                    <span class="btn-icon">+</span>
+                    <span>Crear nuevo lote</span>
+                </a>
+                
+                <a href="/seleccionlote" class="btn-custom">
+                    <span class="btn-icon">-</span>
+                    <span>Seleccionar lote existente</span>
+                </a>    
+            </div>
+
+            <!-- Botón de regreso -->
+            <div class="button-container" style="margin-top: 30px; text-align: center;">
+                <button id="volver-btn" class="btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </button>
+            </div>
         </div>
-    </div>
     </div>
 
+    <!-- Script para manejar el botón volver -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const volverBtn = document.getElementById('volver-btn');
+            if (volverBtn) {
+                volverBtn.addEventListener('click', () => {
+                    window.history.back();
+                });
+            }
+        });
+    </script>
 </body>
 </html>
