@@ -4,7 +4,6 @@ const { verificarAuth, verificarRol } = require('../controllers/authController')
 const { authMiddleware } = require('../middlewares/authMiddleware');
 
 
-
 // Rutas protegidas (para redirigir a los roles)
 // Dashboard para rol Admin inventario
 router.get('/adminventario', 
