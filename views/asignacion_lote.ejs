@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Selección de Opciones</title>
-    <link rel="stylesheet" href="css/seleccion.css">
+    <link rel="stylesheet" href="/css/seleccion.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <div class="app-container">
@@ -16,11 +16,10 @@
                 <h2>Fase registro</h2>
             </div>
             <div class="user-profile">
-                <img src="images/usuario.webp" alt="Usuario" class="user-avatar">
+                <img src="img/usuario.webp" alt="Usuario" class="user-avatar">
                 <span id="username-display" class="user-name">Usuario</span>
             </div>
         </header>
-
 
         <main class="main-content">
             <form class="asignacion-form">
@@ -50,56 +49,59 @@
                     <i class="fas fa-plus-circle"></i> Crear Asignación
                 </button>
             </form>
+
+            <!-- 🔙 Botón de regreso -->
+            <div class="form-group" style="margin-top: 20px; text-align: center;">
+                <button id="volver-btn" class="btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </button>
+            </div>
         </main>
     </div>
 
-    
     <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Cargar usuario
-    const usuario = localStorage.getItem('usuarioActual') || 'Usuario';
-    document.getElementById('username-display').textContent = usuario;
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cargar usuario
+        const usuario = localStorage.getItem('usuarioActual') || 'Usuario';
+        document.getElementById('username-display').textContent = usuario;
 
-    // Manejar envío del formulario
-    const form = document.querySelector('.selection-form');
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const tipoProceso = document.getElementById('tipo-proceso').value;
-        const categoria = document.getElementById('categoria').value;
-        const prioridad = document.getElementById('prioridad').value;
+        // Manejar envío del formulario
+        const form = document.querySelector('.asignacion-form');
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
 
-        // Validación
-        if (!tipoProceso || !categoria) {
-            alert('Por favor complete todos los campos requeridos');
-            return;
+            const numeroLote = document.getElementById('numero-lote').value;
+            const sku = document.getElementById('sku').value;
+
+            if (!numeroLote || !sku) {
+                alert('Por favor complete todos los campos requeridos');
+                return;
+            }
+
+            const asignacion = {
+                lote: numeroLote,
+                sku: sku,
+                usuario: usuario,
+                fecha: new Date().toISOString()
+            };
+
+            console.log('Asignación creada:', asignacion);
+
+            alert('Asignación registrada correctamente');
+
+            // Aquí puedes guardar o redirigir según necesites
+            // localStorage.setItem('asignacionActual', JSON.stringify(asignacion));
+            // window.location.href = 'siguiente.html';
+        });
+
+        // Botón volver
+        const volverBtn = document.getElementById('volver-btn');
+        if (volverBtn) {
+            volverBtn.addEventListener('click', () => {
+                window.history.back();
+            });
         }
-
-        // Crear objeto con los datos
-        const seleccion = {
-            proceso: tipoProceso,
-            categoria: categoria,
-            prioridad: prioridad,
-            usuario: usuario,
-            fecha: new Date().toISOString()
-        };
-
-        console.log('Datos seleccionados:', seleccion);
-        
-        // Aquí puedes enviar los datos al servidor o redirigir
-        // Ejemplo:
-        // localStorage.setItem('seleccionActual', JSON.stringify(seleccion));
-        // window.location.href = 'procesar.html';
-        
-        alert('Selección registrada correctamente');
     });
-
-    // Manejar cambio en Tipo de Proceso
-    document.getElementById('tipo-proceso').addEventListener('change', function() {
-        console.log('Proceso seleccionado:', this.value);
-        // Puedes agregar lógica adicional aquí
-    });
-});
-</script>
+    </script>
 </body>
 </html>

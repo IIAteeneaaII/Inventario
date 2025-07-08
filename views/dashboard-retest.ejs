@@ -79,6 +79,9 @@
     </div>
 
     <script >document.addEventListener('DOMContentLoaded', function() {
+         document.getElementById('volver-btn').addEventListener('click', () => {
+    window.history.back(); // Redirige a la página anterior
+  });
     // Elementos del DOM
     const snInput = document.getElementById('sn-input');
     const reparacionesInput = document.getElementById('reparaciones-input');
@@ -207,6 +210,7 @@
     // Poner foco en el campo S/N al cargar
     snInput.focus();
 });
+
 </script>
 </body>
 </html>
