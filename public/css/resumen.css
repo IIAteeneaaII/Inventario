@@ -139,12 +139,13 @@ input[type="text"]:focus, select:focus {
 .btn-confirmar i {
     font-size: 1.1em;
 }
-.top-right {
+  .top-right {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 10px;
+    right: 10px;
     display: flex;
-    align-items: center;
+    align-items: center; /* Alineación horizontal */
+    gap: 15px; /* Esto separa los elementos entre sí */
 }
 
 .user-icon {
@@ -154,6 +155,20 @@ input[type="text"]:focus, select:focus {
     object-fit: cover;
     margin-right: 10px;
     border: 2px solid #66b3b7;
+    
+}
+.logout-icon:hover {
+    transform: scale(1.1);
+    opacity: 0.8;
+}
+.logout-icon {
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
+    margin-top: 10px; /* Aumenta el espacio vertical */
+    transition: transform 0.2s;
+    gap: 8px; /* Esto separa todos los elementos */
+
 }
 /* Estilos para la columna Tipo */
 .registros-table td:nth-child(4) {
