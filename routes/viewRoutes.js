@@ -94,4 +94,13 @@ router.get('/lineaLote',
       res.render('seleccion_lote', { user: req.user });
   }
 );
+
+// Dashboard para Registro
+router.get('/Registros', 
+  verificarAuth,   
+  verificarRol('UReg'), 
+  (req, res) => {
+      res.render('dashboard_registros', { user: req.user });
+  }
+);
 module.exports = router;
