@@ -63,6 +63,14 @@ app.get('/', (req, res) => {
   req.session.success = null;
 });
 
+// Página de registro para pruebas 
+app.get('/registro_prueba', (req, res) => {
+  res.render('dasboard_registro', {
+    error: req.session?.error,
+    success: req.session?.success
+  });
+});
+
 app.get('/TerminosyCondiciones', (req, res) => res.render('terminosyCondiciones'));
 
 // Middlewares protegidos DESPUÉS de las rutas públicas
@@ -82,13 +90,7 @@ app.get('/dashboard', verificarAuth, (req, res) => {
   res.render('dashboard', { usuario: req.user });
 });
 
-// Página de registro para pruebas 
-app.get('/registro_prueba', (req, res) => {
-  res.render('dasboard_registro', {
-    error: req.session?.error,
-    success: req.session?.success
-  });
-});
+
 
 // ========== ✅ VISTAS SECUNDARIAS PROTEGIDAS ========== //
 app.get('/EliminarCuenta', authMiddleware, (req, res) => res.render('eliminarCuenta'));
