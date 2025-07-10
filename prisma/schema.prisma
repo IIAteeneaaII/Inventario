@@ -8,16 +8,16 @@ datasource db {
 }
 
 enum Rol {
-  UAI
-  UA
-  UV
-  UReg
-  UTI
-  UR
-  UC
-  UE
-  ULL
-  UEN
+  UAI // Administrador de Inventario
+  UA  // User Almacén
+  UV  // User Visualizador
+  UReg // User Registro
+  UTI // User Test Inicial
+  UR  // User Retest
+  UC  // User Cosmetica
+  UE  // User Empaque
+  ULL // User Liberacion y limpieza
+  UEN // User Ensamble
 }
 
 enum EstadoRegistro {
@@ -40,7 +40,7 @@ enum FaseProceso {
   TEST_INICIAL
   COSMETICA
   LIBERACION_LIMPIEZA
-  ENSAMBLE
+  ENSAMBLE        // Nueva fase añadida
   RETEST
   EMPAQUE
 }
@@ -53,8 +53,10 @@ model User {
   email             String            @unique
   password          String
   rol               Rol
+  activo             Boolean           
+  deletedAt          DateTime?         
   registros         Registro[]
-  lotesSku          LoteSku[]         @relation("UserLotesSku")
+  lotes             Lote[]            @relation("UserLotes")
   logs              Log[]
   modems            Modem[]
   transiciones      TransicionFase[]
@@ -67,33 +69,47 @@ model User {
 model CatalogoSKU {
   id          Int       @id @default(autoincrement())
   nombre      String    @unique
-  skuItem     String    @unique
+  descripcion String?
+  lotes       Lote[]
   modems      Modem[]
-  lotesSku    LoteSku[]
-  loteEmpaques LoteEmpaque[]
+}
+
+// Lotes de trabajo
+model Lote {
+  id            Int          @id @default(autoincrement())
+  numero        String       @unique
+  skuId         Int
+  sku           CatalogoSKU  @relation(fields: [skuId], references: [id])
+  estado        EstadoLote   @default(EN_PROCESO)
+  prioridad     Int          @default(5) // Mayor número = mayor prioridad
+  responsableId Int
+  responsable   User         @relation("UserLotes", fields: [responsableId], references: [id])
+  registros     Registro[]
+  modems        Modem[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?    // Borrado lógico
 }
 
 // Modems/Dispositivos a procesar
 model Modem {
-  id            Int       @id @default(autoincrement())
-  sn            String    @unique
-  loteSkuId     Int
-  loteSku       LoteSku   @relation(fields: [loteSkuId], references: [id])
-  skuId         Int
-  sku           CatalogoSKU @relation(fields: [skuId], references: [id])
+  id            Int               @id @default(autoincrement())
+  sn            String            @unique
+  skuId         Int?
+  sku           CatalogoSKU?      @relation(fields: [skuId], references: [id])
   estadoActualId Int
-  estadoActual  Estado    @relation(fields: [estadoActualId], references: [id])
+  estadoActual  Estado            @relation(fields: [estadoActualId], references: [id])
   faseActual    FaseProceso
+  loteId        Int
+  lote          Lote              @relation(fields: [loteId], references: [id])
   registros     Registro[]
   responsableId Int
-  responsable   User      @relation(fields: [responsableId], references: [id])
+  responsable   User              @relation(fields: [responsableId], references: [id])
   transiciones  TransicionFase[]
   estadoHistorial EstadoTransicion[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime?
-  loteEmpaqueId Int?
-  loteEmpaque   LoteEmpaque? @relation(fields: [loteEmpaqueId], references: [id])
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  deletedAt     DateTime?         // Borrado lógico
 }
 
 // Registros de acciones realizadas
@@ -107,14 +123,14 @@ model Registro {
   reparacion    String?
   userId        Int
   user          User            @relation(fields: [userId], references: [id])
-  loteSkuId     Int
-  loteSku       LoteSku         @relation(fields: [loteSkuId], references: [id])
+  loteId        Int
+  lote          Lote            @relation(fields: [loteId], references: [id])
   modemId       Int
   modem         Modem           @relation(fields: [modemId], references: [id])
   createdAt     DateTime        @default(now())
 
   @@index([userId])
-  @@index([loteSkuId])
+  @@index([loteId])
   @@index([modemId])
 }
 
@@ -150,16 +166,17 @@ model Log {
 
 //=== TABLAS PARA MÁQUINA DE ESTADOS ===//
 
+// Definición de estados posibles en el sistema
 model Estado {
   id                Int                 @id @default(autoincrement())
   nombre            String              @unique
   descripcion       String?
-  codigoInterno     String              @unique
+  codigoInterno     String              @unique // Código técnico para programación
   esFinal           Boolean             @default(false)
   requiereObservacion Boolean           @default(false)
   ordenDisplay      Int                 @default(0)
-  color             String?
-  modems            Modem[]
+  color             String?             // Color para UI (hex o nombre)
+  modems            Modem[]             // Modems actualmente en este estado
   transicionesDesde TransicionEstado[]  @relation("EstadoDesde")
   transicionesHacia TransicionEstado[]  @relation("EstadoHacia")
   historial         EstadoTransicion[]  @relation("EstadoAnterior")
@@ -168,17 +185,18 @@ model Estado {
   updatedAt         DateTime            @updatedAt
 }
 
+// Transiciones permitidas entre estados
 model TransicionEstado {
   id                Int      @id @default(autoincrement())
   estadoDesdeId     Int
   estadoDesde       Estado   @relation("EstadoDesde", fields: [estadoDesdeId], references: [id])
   estadoHaciaId     Int
   estadoHacia       Estado   @relation("EstadoHacia", fields: [estadoHaciaId], references: [id])
-  nombreEvento      String
+  nombreEvento      String   // Nombre del evento que causa la transición
   descripcion       String?
   requiereCantidad  Boolean  @default(false)
   requiereObservacion Boolean @default(false)
-  rolesPermitidos   String?
+  rolesPermitidos   String?  // Lista separada por comas de roles permitidos
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -187,6 +205,7 @@ model TransicionEstado {
   @@index([estadoHaciaId])
 }
 
+// Historial de transiciones de estado por modem
 model EstadoTransicion {
   id             Int      @id @default(autoincrement())
   modemId        Int
@@ -196,8 +215,8 @@ model EstadoTransicion {
   estadoNuevoId  Int
   estadoNuevo    Estado   @relation("EstadoNuevo", fields: [estadoNuevoId], references: [id])
   fase           FaseProceso
-  evento         String
-  cantidad       Int?
+  evento         String   // Evento que causó la transición
+  cantidad       Int?     // Cantidad afectada (si aplica)
   observaciones  String?
   userId         Int
   user           User     @relation(fields: [userId], references: [id])
@@ -208,39 +227,4 @@ model EstadoTransicion {
   @@index([estadoNuevoId])
   @@index([userId])
   @@index([fase])
-}
-
-model Carga {
-  id        Int       @id @default(autoincrement())
-  fecha     DateTime  @default(now())
-  descripcion String?
-  lotesSku  LoteSku[]
-}
-
-model LoteSku {
-  id              Int          @id @default(autoincrement())
-  numero          String       @unique
-  cargaId         Int
-  carga           Carga        @relation(fields: [cargaId], references: [id])
-  skuId           Int
-  sku             CatalogoSKU  @relation(fields: [skuId], references: [id])
-  registroAbierto Boolean      @default(true)
-  responsableId   Int
-  responsable     User         @relation("UserLotesSku", fields: [responsableId], references: [id])
-  modems          Modem[]
-  registros       Registro[]
-  estado          EstadoLote   @default(EN_PROCESO)
-  prioridad       Int          @default(5)
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  deletedAt       DateTime?
-}
-
-model LoteEmpaque {
-  id        Int      @id @default(autoincrement())
-  numero    String   @unique
-  skuId     Int
-  sku       CatalogoSKU @relation(fields: [skuId], references: [id])
-  modems    Modem[]
-  createdAt DateTime @default(now())
 }
