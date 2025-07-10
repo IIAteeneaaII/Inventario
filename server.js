@@ -17,7 +17,12 @@ const { verificarAuth, verificarRol } = require('./controllers/authController');
 const { authMiddleware } = require('./middlewares/authMiddleware');
 const { loadAllJobs } = require('./utils/jobManager');
 const viewRoutes = require('./routes/viewRoutes');
-
+const loggerMiddleware = require('./middlewares/loggerMiddleware');
+const morgan = require('morgan');
+const logger = require('./utils/logger');
+// === Agregar ruta de logs para testeo ===
+const logRoutes = require('./routes/logRoutes');
+app.use('/api/logs', logRoutes);
 
 // Configuración EJS
 app.set('view engine', 'ejs');
@@ -35,10 +40,20 @@ app.use(session({
   cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 
-// ========== ✅ RUTAS PÚBLICAS ========== //
+// Log HTTP requests con morgan y winston
+app.use(morgan('combined', {
+  stream: {
+    write: (message) => logger.info({ level: 'HTTP', message: message.trim() })
+  }
+}));
+
+
+app.use(loggerMiddleware);
+
+// === Endpoint de logs para testeo automatizado ===
+// RUTAS PÚBLICAS
 app.use('/api/auth', authRoutes); // Registro, login, recuperación, etc.
 
-// Página principal (login)
 app.get('/', (req, res) => {
   res.render('login', {
     error: req.session?.error,
@@ -48,12 +63,10 @@ app.get('/', (req, res) => {
   req.session.success = null;
 });
 
-
-
-
-
-// Página de términos
 app.get('/TerminosyCondiciones', (req, res) => res.render('terminosyCondiciones'));
+
+// Middlewares protegidos DESPUÉS de las rutas públicas
+app.use(authMiddleware); // El resto sí protegido
 
 // ========== 🔐 RUTAS PROTEGIDAS (Requieren login) ========== //
 app.use('/admin', verificarAuth, verificarRol('UAI'), adminRoutes);
@@ -90,7 +103,16 @@ app.get('/consulta-ns-admin', verificarAuth, (req, res) => res.render('consulta_
 app.get('/seleccion-lote-admin', verificarAuth, (req, res) => res.render('seleccion_lote_admin'));
 app.get('/seleccion-lote', verificarAuth, (req, res) => res.render('seleccion_lote'));
 
-
+// === Página especializada para el Usuario Visualizador (UV) ===
+const axios = require('axios');
+app.get('/visualizador-uv', async (req, res) => {
+  try {
+    const response = await axios.get('http://localhost:3000/api/logs/test-summary');
+    res.render('visualizadorUV', { tests: response.data.tests });
+  } catch (error) {
+    res.render('visualizadorUV', { tests: [], error: 'No se pudo obtener el resumen de tests.' });
+  }
+});
 
 // ========== ❌ RUTA DE ERROR GLOBAL ========== //
 app.use((err, req, res, next) => {
