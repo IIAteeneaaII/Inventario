@@ -21,8 +21,6 @@ BEGIN
             'ELIMINAR_LOGICO',
             'Modem',
             'Eliminación lógica del modem con SN: ' || OLD.sn,
-            -- Aquí necesitamos el ID del usuario que realiza la acción
-            -- Como no lo tenemos en el contexto del trigger, usamos un valor por defecto
             1, -- Usuario sistema o se podría usar una variable de sesión
             NOW()
         );
@@ -35,23 +33,21 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger para manejar borrado lógico de modems
+DROP TRIGGER IF EXISTS borrado_logico_modem_trigger ON "Modem";
 CREATE TRIGGER borrado_logico_modem_trigger
 BEFORE DELETE ON "Modem"
 FOR EACH ROW
 EXECUTE FUNCTION borrado_logico_modem();
 
--- Función similar para Lote
-CREATE OR REPLACE FUNCTION borrado_logico_lote()
+-- Función para manejar borrado lógico de LoteSku
+CREATE OR REPLACE FUNCTION borrado_logico_lotesku()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- En lugar de eliminar, marcar como eliminado
     IF TG_OP = 'DELETE' THEN
-        UPDATE "Lote"
+        UPDATE "LoteSku"
         SET "deletedAt" = NOW(),
             "updatedAt" = NOW()
         WHERE id = OLD.id;
-        
-        -- Registrar la acción en el log
         INSERT INTO "Log" (
             accion,
             entidad,
@@ -61,21 +57,20 @@ BEGIN
         )
         VALUES (
             'ELIMINAR_LOGICO',
-            'Lote',
-            'Eliminación lógica del lote: ' || OLD.numero,
-            1, -- Usuario sistema o variable de sesión
+            'LoteSku',
+            'Eliminación lógica del loteSku: ' || OLD.numero,
+            1,
             NOW()
         );
-        
-        RETURN NULL; -- No elimina realmente el registro
+        RETURN NULL;
     END IF;
-    
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger para manejar borrado lógico de lotes
-CREATE TRIGGER borrado_logico_lote_trigger
-BEFORE DELETE ON "Lote"
+-- Trigger para manejar borrado lógico de LoteSku
+DROP TRIGGER IF EXISTS borrado_logico_lotesku_trigger ON "LoteSku";
+CREATE TRIGGER borrado_logico_lotesku_trigger
+BEFORE DELETE ON "LoteSku"
 FOR EACH ROW
-EXECUTE FUNCTION borrado_logico_lote();
+EXECUTE FUNCTION borrado_logico_lotesku();
