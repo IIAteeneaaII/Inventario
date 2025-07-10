@@ -3,6 +3,10 @@ const router = express.Router();
 const { verificarAuth, verificarRol } = require('../controllers/authController');
 const { authMiddleware } = require('../middlewares/authMiddleware');
 
+// Ruta pública para registro de usuario (debe estar antes de cualquier middleware de autenticación)
+router.get('/registro_prueba', (req, res) => {
+  res.render('dasboard_registro');
+});
 
 // Rutas protegidas (para redirigir a los roles)
 // Dashboard para rol Admin inventario
@@ -103,4 +107,6 @@ router.get('/Registros',
       res.render('dashboard_registros', { user: req.user });
   }
 );
+
+
 module.exports = router;
