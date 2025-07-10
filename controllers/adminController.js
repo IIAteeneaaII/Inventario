@@ -229,3 +229,57 @@ exports.verLogs = async (req, res) => {
     res.status(500).json({ error: 'Error al obtener logs' });
   }
 };
+
+/**
+ * Eliminar usuario (soft delete)
+ */
+exports.eliminarUsuarioSoft = async (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { deletedAt: new Date() }
+    });
+
+    return res.status(200).json({ message: 'Cuenta eliminada (soft delete) correctamente' });
+  } catch (error) {
+    console.error("Error al eliminar usuario (soft delete):", error);
+    return res.status(500).json({ message: 'Error interno al eliminar usuario' });
+  }
+};
+
+/**
+ * Desactivar usuario (activo: false)
+ */
+exports.desactivarUsuario = async (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { activo: false }
+    });
+
+    return res.status(200).json({ message: 'Cuenta desactivada correctamente' });
+  } catch (error) {
+    console.error("Error al desactivar usuario:", error);
+    return res.status(500).json({ message: 'Error interno al desactivar usuario' });
+  }
+};

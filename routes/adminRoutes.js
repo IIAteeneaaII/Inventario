@@ -11,8 +11,9 @@ router.get('/', (req, res) => {
 // Middleware para proteger todas las rutas: primero verifica que el usuario esté autenticado
 router.use(verificarAuth);
 
-// Middleware para verificar que el usuario tenga el rol 'UAI' (Administrador de Inventario)
-router.use(verificarRol('UAI'));
+// Middleware para verificar que el usuario tenga el rol 'UAI' (Administrador de Inventario) y el visualizador o sea nosotros
+router.use(verificarRol(['UAI', 'UV']));
+
 
 
 
@@ -32,5 +33,12 @@ router.get('/logs', adminController.verLogs);
 
 // Ruta para actualizar un usuario existente por su ID
 router.put('/usuarios/:id', adminController.actualizarUsuario);
+
+// Eliminar cuenta (soft delete)
+router.post('/usuarios/:id/eliminar', adminController.eliminarUsuarioSoft);
+
+// Desactivar cuenta
+router.post('/usuarios/:id/desactivar', adminController.desactivarUsuario);
+
 
 module.exports = router;
