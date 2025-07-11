@@ -21,7 +21,7 @@ async function main() {
     console.log(`⚠️ SKU 'Fiberhome X-10' no existía. Se creó temporalmente con ID ${sku.id}.`);
   }
 
-  // Mapeo de usuarios a estados
+  // Mapeo de usuarios a estados (ajusta si agregas más usuarios/fases)
   const MAPA_USUARIO_ESTADO = {
     'Registro': 'REGISTRO',
     'Testini': 'TEST_INICIAL',
@@ -31,6 +31,7 @@ async function main() {
     'Empaque': 'EMPAQUE'
   };
 
+  // Definición de fases en orden secuencial
   const fasesOrdenadas = [
     "REGISTRO",
     "TEST_INICIAL",
@@ -42,7 +43,7 @@ async function main() {
 
   for (let registro of data) {
     try {
-      // Validar o crear usuario temporal
+      // Validar o crear usuario responsable temporal
       let user = await prisma.user.findUnique({
         where: { userName: registro.usuario }
       });
@@ -61,7 +62,7 @@ async function main() {
         console.log(`⚠️ Usuario ${registro.usuario} no existía. Creado temporalmente.`);
       }
 
-      // Obtener nombre de estado según usuario o crear temporal
+      // Obtener nombre de estado según usuario o asignar temporal
       const estadoNombre = MAPA_USUARIO_ESTADO[registro.usuario] || `TEMP_${registro.usuario.toUpperCase()}`;
 
       let estado = await prisma.estado.findUnique({
@@ -82,28 +83,6 @@ async function main() {
         console.log(`⚠️ Estado '${estadoNombre}' no existía. Creado temporalmente con ID ${estado.id}.`);
       }
 
-      // Validar o crear lote temporal si no existe
-      let lote;
-
-      if (registro.loteId) {
-        lote = await prisma.lote.findUnique({
-          where: { id: registro.loteId }
-        });
-      }
-
-      if (!lote) {
-        lote = await prisma.lote.create({
-          data: {
-            numero: `TEMP-LOTE-${registro.sn}`,
-            skuId: sku.id,
-            estado: 'EN_PROCESO',
-            prioridad: 5,
-            responsableId: user.id
-          }
-        });
-        console.log(`⚠️ Lote temporal creado con ID ${lote.id} para SN ${registro.sn}.`);
-      }
-
       // Si fase es null, asignar fase temporal REGISTRO
       if (!registro.fase) {
         registro.fase = "REGISTRO";
@@ -118,7 +97,7 @@ async function main() {
           faseActual: registro.fase,
           responsableId: user.id,
           skuId: sku.id,
-          loteId: lote.id
+          loteId: registro.loteId || 1
         },
         create: {
           sn: registro.sn,
@@ -126,11 +105,11 @@ async function main() {
           faseActual: registro.fase,
           responsableId: user.id,
           skuId: sku.id,
-          loteId: lote.id
+          loteId: registro.loteId || 1
         }
       });
 
-      // Validar e insertar fases previas si faltan
+      // 🛠️ Validar e insertar fases previas si faltan
       const faseIndex = fasesOrdenadas.indexOf(registro.fase);
 
       for (let i = 0; i < faseIndex; i++) {
@@ -150,7 +129,7 @@ async function main() {
               fase: fasePrev,
               estado: 'SN_OK',
               userId: user.id,
-              loteId: lote.id,
+              loteId: registro.loteId || 1,
               modemId: modem.id,
               createdAt: new Date()
             }
@@ -166,7 +145,7 @@ async function main() {
           fase: registro.fase,
           estado: registro.rechazo === 'False' ? 'SN_OK' : 'SCRAP_ELECTRONICO',
           userId: user.id,
-          loteId: lote.id,
+          loteId: registro.loteId || 1,
           modemId: modem.id,
           motivoScrapId: registro.motivoScrapId || null,
           reparacion: registro.reparacion || null,
