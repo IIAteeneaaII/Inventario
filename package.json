@@ -9,7 +9,12 @@
     "test": "jest",
     "prisma:generate": "npx prisma generate",
     "prisma:migrate": "npx prisma migrate dev",
-    "prisma:studio": "npx prisma studio"
+    "prisma:studio": "npx prisma studio",
+    "seed": "npx prisma db seed",
+    "seed:inventario": "node scripts/import_seed.js",
+    "seed:users": "node scripts/seed_users.js",
+    "seed:sku_lote": "node scripts/seed_sku_lote.js",
+    "seed:all": "npm run seed && npm run seed:inventario"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
