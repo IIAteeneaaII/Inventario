@@ -464,3 +464,33 @@ input[type="text"]:focus, select:focus {
             background-color: #fab1a0;
             color: #c23616;
         }
+.titulo-con-boton {
+    position: relative;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.titulo-con-boton h1 {
+    margin: 0;
+    font-size: 1.8em;
+    color: #365a66;
+}
+
+.btn-resumen {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #66b3b7;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 15px;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-resumen:hover {
+    background-color: #4e8c8f;
+}
