@@ -1,5 +1,4 @@
 /* Modifica estos estilos en tu archivo CSS */
-
 /* Estilos generales - Añade padding-top para bajar todo el contenido */
 body {
     font-family: Arial, sans-serif;
@@ -264,6 +263,11 @@ input[type="text"]:focus, select:focus {
     color: red;
 }
 
+/* PARA RESUMEN DE LOTES */
+    .registros-table td:nth-child(4), .registros-table th:nth-child(4) {
+      text-align: center;
+    }
+
 /* Estilos responsivos */
 @media (max-width: 768px) {
     .app-container {
@@ -464,6 +468,7 @@ input[type="text"]:focus, select:focus {
             background-color: #fab1a0;
             color: #c23616;
         }
+
 .titulo-con-boton {
     position: relative;
     text-align: center;
