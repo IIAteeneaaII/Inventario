@@ -283,3 +283,40 @@ exports.desactivarUsuario = async (req, res) => {
     return res.status(500).json({ message: 'Error interno al desactivar usuario' });
   }
 };
+// Alternar estado activo del usuario
+exports.toggleEstadoUsuario = async (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+
+  try {
+    const usuario = await prisma.usuario.findUnique({ where: { id: userId } });
+
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    const nuevoEstado = !usuario.activo;
+
+    const actualizado = await prisma.usuario.update({
+      where: { id: userId },
+      data: { activo: nuevoEstado }
+    });
+
+    // Registrar la acción
+    await prisma.log.create({
+      data: {
+        usuarioId: req.usuario.id,
+        accion: nuevoEstado ? 'habilitar' : 'deshabilitar',
+        entidad: 'Usuario',
+        detalle: `${nuevoEstado ? 'Habilitó' : 'Deshabilitó'} usuario ID ${userId}`
+      }
+    });
+
+    return res.json({
+      mensaje: `Usuario ${nuevoEstado ? 'habilitado' : 'deshabilitado'} correctamente`,
+      activo: nuevoEstado
+    });
+  } catch (error) {
+    console.error('Error al alternar estado del usuario:', error);
+    return res.status(500).json({ error: 'Error interno al cambiar estado del usuario' });
+  }
+};

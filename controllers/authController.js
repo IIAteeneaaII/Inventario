@@ -60,6 +60,9 @@ exports.login = async (req, res) => {
         return res.json({ redirectTo: '/adminventario' });
       case 'UReg':
         return res.json({ redirectTo: '/registro' });
+      case 'UV':
+        return res.json({ redirectTo: '/nuevos_usuarios' });
+        
       default:
         if (rolesSeleccionLote.includes(user.rol)) {
           return res.json({ redirectTo: '/seleccionlote' });

@@ -39,6 +39,8 @@ router.post('/usuarios/:id/eliminar', adminController.eliminarUsuarioSoft);
 
 // Desactivar cuenta
 router.post('/usuarios/:id/desactivar', adminController.desactivarUsuario);
+// Habilitar o deshabilitar usuario
+router.patch('/usuarios/:id/toggle', adminController.toggleEstadoUsuario);
 
 
 module.exports = router;

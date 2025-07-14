@@ -126,162 +126,208 @@
   </div>
 
   <script>
-    let usuarios = [
-      { id: 1, nombre: "Ana López", userName: "ana", email: "ana.lopez@empresa.com", rol: "UAI", activo: true },
-      { id: 2, nombre: "Carlos Mendoza", userName: "carlos", email: "carlos.m@empresa.com", rol: "UReg", activo: true },
-      { id: 3, nombre: "María Torres", userName: "maria", email: "maria.t@empresa.com", rol: "UTI", activo: true },
-      { id: 4, nombre: "Jorge Ramírez", userName: "jorge", email: "jorge.r@empresa.com", rol: "UC", activo: true }
-    ];
-    
-    let nextId = 5;
-
-    function mostrarMensaje(texto, tipo) {
-      Swal.fire({
-        icon: tipo === 'error' ? 'error' : tipo === 'success' ? 'success' : 'info',
-        title: texto,
-        showConfirmButton: false,
-        timer: 2000
-      });
-    }
-
-    function obtenerTextoRol(codigoRol) {
-      const roles = {
-        'UAI': 'Administrador (UAI)', 'UReg': 'Registro (UReg)', 'UTI': 'Test Inicial (UTI)',
-        'UC': 'Calidad (UC)', 'ULL': 'Liberación y Limpieza (ULL)', 'UR': 'Re-Test (UR)', 'UE': 'Empaque (UE)'
-      };
-      return roles[codigoRol] || codigoRol;
-    }
-
-    function renderizarTabla() {
-      const tbody = document.getElementById('usuariosTableBody');
-      tbody.innerHTML = '';
-      usuarios.forEach(usuario => {
-        const tr = document.createElement('tr');
-        tr.dataset.id = usuario.id;
-        tr.className = usuario.activo ? '' : 'usuario-deshabilitado';
-        tr.innerHTML = `
-          <td>${usuario.id}</td>
-          <td>${usuario.nombre}</td>
-          <td>${usuario.email}</td>
-          <td><span class="rol-tag">${obtenerTextoRol(usuario.rol)}</span></td>
-          <td>
-            <button class="acciones-btn" onclick="abrirModal(${usuario.id})">✏️ Editar</button>
-            <button class="acciones-btn" onclick="eliminarUsuario(${usuario.id})">🗑️ Eliminar</button>
-            <button class="acciones-btn" onclick="toggleUsuario(${usuario.id})">
-              ${usuario.activo ? '🚫 Deshabilitar' : '✅ Habilitar'}
-            </button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function crearUsuario() {
-      const nombre = document.getElementById('nombre').value;
-      const userName = document.getElementById('userName').value;
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const rol = document.getElementById('rol').value;
-
-      if (!nombre || !userName || !email || !password || !rol) {
-        mostrarMensaje('Por favor, complete todos los campos', 'error');
-        return;
-      }
-
-      const nuevoUsuario = { id: nextId++, nombre, userName, email, rol, activo: true };
-      usuarios.push(nuevoUsuario);
-      renderizarTabla();
-      mostrarMensaje(`Usuario "${nombre}" creado exitosamente`, 'success');
-      document.getElementById('formCrearUsuario').reset();
-    }
-
-    function eliminarUsuario(id) {
-      const usuario = usuarios.find(u => u.id === id);
-      if (!usuario) return;
-
-      Swal.fire({
-        title: `¿Eliminar a "${usuario.nombre}"?`,
-        text: "Esta acción no se puede deshacer",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Sí, eliminar",
-        cancelButtonText: "Cancelar"
-      }).then((result) => {
-        if (result.isConfirmed) {
-          usuarios = usuarios.filter(u => u.id !== id);
-          renderizarTabla();
-          mostrarMensaje(`Usuario "${usuario.nombre}" eliminado`, 'success');
-        }
-      });
-    }
-
-    function toggleUsuario(id) {
-      const usuario = usuarios.find(u => u.id === id);
-      if (!usuario) return;
-
-      const accion = usuario.activo ? "deshabilitar" : "habilitar";
-
-      Swal.fire({
-        title: `¿Quieres ${accion} a "${usuario.nombre}"?`,
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: `Sí, ${accion}`,
-        cancelButtonText: "Cancelar"
-      }).then((result) => {
-        if (result.isConfirmed) {
-          usuario.activo = !usuario.activo;
-          renderizarTabla();
-          mostrarMensaje(`Usuario "${usuario.nombre}" ha sido ${accion}do`, 'info');
-        }
-      });
-    }
-
-    function abrirModal(userId) {
-      const usuario = usuarios.find(u => u.id === userId);
-      if (usuario) {
-        document.getElementById('editarId').value = usuario.id;
-        document.getElementById('editarNombre').value = usuario.nombre;
-        document.getElementById('editarEmail').value = usuario.email;
-        document.getElementById('editarRol').value = usuario.rol;
-        document.getElementById('modalEditar').style.display = 'flex';
-      }
-    }
-
-    function cerrarModal() {
-      document.getElementById('modalEditar').style.display = 'none';
-    }
-
-    function guardarEdicion() {
-      const id = parseInt(document.getElementById('editarId').value);
-      const nombre = document.getElementById('editarNombre').value;
-      const email = document.getElementById('editarEmail').value;
-      const rol = document.getElementById('editarRol').value;
-
-      const usuario = usuarios.find(u => u.id === id);
-      if (usuario) {
-        usuario.nombre = nombre;
-        usuario.email = email;
-        usuario.rol = rol;
-        renderizarTabla();
-        mostrarMensaje(`Usuario "${nombre}" actualizado`, 'success');
-        cerrarModal();
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      renderizarTabla();
-      document.getElementById('formCrearUsuario').addEventListener('submit', e => {
-        e.preventDefault();
-        crearUsuario();
-      });
-      document.getElementById('formEditarUsuario').addEventListener('submit', e => {
-        e.preventDefault();
-        guardarEdicion();
-      });
-      document.getElementById('modalEditar').addEventListener('click', e => {
-        if (e.target === document.getElementById('modalEditar')) cerrarModal();
-      });
+  const token = localStorage.getItem('token');
+  if (!token) {
+    Swal.fire("No estás autenticado", "Por favor inicia sesión", "warning").then(() => {
+      window.location.href = "/";
     });
-  </script>
+  }
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + token
+  };
+
+  let usuarios = [];
+
+  async function cargarUsuarios() {
+    const res = await fetch('/admin/usuarios', { headers });
+    if (res.ok) {
+      usuarios = await res.json();
+      renderizarTabla();
+    } else {
+      mostrarMensaje("Error al cargar usuarios", "error");
+    }
+  }
+
+  function mostrarMensaje(texto, tipo) {
+    Swal.fire({
+      icon: tipo === 'error' ? 'error' : tipo === 'success' ? 'success' : 'info',
+      title: texto,
+      showConfirmButton: false,
+      timer: 2000
+    });
+  }
+
+  function obtenerTextoRol(codigoRol) {
+    const roles = {
+      'UAI': 'Administrador (UAI)', 'UReg': 'Registro (UReg)', 'UTI': 'Test Inicial (UTI)',
+      'UC': 'Calidad (UC)', 'ULL': 'Liberación y Limpieza (ULL)', 'UR': 'Re-Test (UR)', 'UE': 'Empaque (UE)'
+    };
+    return roles[codigoRol] || codigoRol;
+  }
+
+  function renderizarTabla() {
+    const tbody = document.getElementById('usuariosTableBody');
+    tbody.innerHTML = '';
+    usuarios.forEach(usuario => {
+      const tr = document.createElement('tr');
+      tr.dataset.id = usuario.id;
+      tr.className = usuario.activo ? '' : 'usuario-deshabilitado';
+      tr.innerHTML = `
+        <td>${usuario.id}</td>
+        <td>${usuario.nombre}</td>
+        <td>${usuario.email}</td>
+        <td><span class="rol-tag">${obtenerTextoRol(usuario.rol)}</span></td>
+        <td>
+          <button class="acciones-btn" onclick="abrirModal(${usuario.id})">✏️ Editar</button>
+          <button class="acciones-btn" onclick="eliminarUsuario(${usuario.id})">🗑️ Eliminar</button>
+          <button class="acciones-btn" onclick="toggleUsuario(${usuario.id})">
+            ${usuario.activo ? '🚫 Deshabilitar' : '✅ Habilitar'}
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function crearUsuario() {
+    const nombre = document.getElementById('nombre').value.trim();
+    const userName = document.getElementById('userName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const rol = document.getElementById('rol').value;
+
+    if (!nombre || !userName || !email || !password || !rol) {
+      mostrarMensaje('Por favor, complete todos los campos', 'error');
+      return;
+    }
+
+    const res = await fetch('/admin/usuarios/nuevo', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ nombre, userName, email, password, rol })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      mostrarMensaje("Usuario creado", "success");
+      document.getElementById('formCrearUsuario').reset();
+      cargarUsuarios();
+    } else {
+      mostrarMensaje(data.error || "Error creando usuario", "error");
+    }
+  }
+
+  async function eliminarUsuario(id) {
+    const usuario = usuarios.find(u => u.id === id);
+    if (!usuario) return;
+
+    const confirm = await Swal.fire({
+      title: `¿Eliminar a "${usuario.nombre}"?`,
+      text: "Esta acción no se puede deshacer",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar"
+    });
+
+    if (confirm.isConfirmed) {
+      const res = await fetch(`/admin/usuarios/${id}`, {
+        method: 'DELETE',
+        headers
+      });
+      const data = await res.json();
+      if (res.ok) {
+        mostrarMensaje("Usuario eliminado", "success");
+        cargarUsuarios();
+      } else {
+        mostrarMensaje(data.error || "Error eliminando usuario", "error");
+      }
+    }
+  }
+
+  async function toggleUsuario(id) {
+    const usuario = usuarios.find(u => u.id === id);
+    if (!usuario) return;
+
+    const accion = usuario.activo ? "deshabilitar" : "habilitar";
+
+    const confirm = await Swal.fire({
+      title: `¿Quieres ${accion} a "${usuario.nombre}"?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: `Sí, ${accion}`,
+      cancelButtonText: "Cancelar"
+    });
+
+    if (confirm.isConfirmed) {
+      const res = await fetch(`/admin/usuarios/${id}/toggle`, {
+        method: 'PATCH',
+        headers
+      });
+      const data = await res.json();
+      if (res.ok) {
+        mostrarMensaje(`Usuario ${accion}do`, "info");
+        cargarUsuarios();
+      } else {
+        mostrarMensaje(data.error || `Error al ${accion} usuario`, "error");
+      }
+    }
+  }
+
+  function abrirModal(userId) {
+    const usuario = usuarios.find(u => u.id === userId);
+    if (usuario) {
+      document.getElementById('editarId').value = usuario.id;
+      document.getElementById('editarNombre').value = usuario.nombre;
+      document.getElementById('editarEmail').value = usuario.email;
+      document.getElementById('editarRol').value = usuario.rol;
+      document.getElementById('modalEditar').style.display = 'flex';
+    }
+  }
+
+  function cerrarModal() {
+    document.getElementById('modalEditar').style.display = 'none';
+  }
+
+  async function guardarEdicion() {
+    const id = document.getElementById('editarId').value;
+    const nombre = document.getElementById('editarNombre').value.trim();
+    const email = document.getElementById('editarEmail').value.trim();
+    const rol = document.getElementById('editarRol').value;
+
+    const res = await fetch(`/admin/usuarios/${id}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ nombre, email, rol })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      mostrarMensaje("Usuario actualizado", "success");
+      cerrarModal();
+      cargarUsuarios();
+    } else {
+      mostrarMensaje(data.error || "Error actualizando usuario", "error");
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    cargarUsuarios();
+    document.getElementById('formCrearUsuario').addEventListener('submit', e => {
+      e.preventDefault();
+      crearUsuario();
+    });
+    document.getElementById('formEditarUsuario').addEventListener('submit', e => {
+      e.preventDefault();
+      guardarEdicion();
+    });
+    document.getElementById('modalEditar').addEventListener('click', e => {
+      if (e.target === document.getElementById('modalEditar')) cerrarModal();
+    });
+  });
+</script>
+
 </body>
 </html>

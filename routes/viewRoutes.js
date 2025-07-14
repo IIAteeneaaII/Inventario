@@ -43,11 +43,11 @@ router.get('/almacen',
   }
 );
 // Dashboard para rol visualizador
-router.get('/visualizacion', 
+router.get('/nuevos_usuarios', 
   verificarAuth,   
   verificarRol('UV'), 
   (req, res) => {
-      res.render('dashboard_visualizador', { user: req.user });
+      res.render('nuevos_usuarios', { user: req.user });
   }
 );
 
