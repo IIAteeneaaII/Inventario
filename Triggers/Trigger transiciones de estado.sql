@@ -6,35 +6,39 @@ DECLARE
     v_roles_permitidos TEXT;
     v_rol_usuario TEXT;
 BEGIN
-    -- Verificar si la transición está permitida
-    SELECT COUNT(*), te."rolesPermitidos"
-    INTO v_transicion_valida, v_roles_permitidos
-    FROM "TransicionEstado" te
-    WHERE te."estadoDesdeId" = OLD."estadoActualId" 
-    AND te."estadoHaciaId" = NEW."estadoActualId"
-    AND te."nombreEvento" = TG_ARGV[0]::TEXT
-    GROUP BY te."rolesPermitidos";
-    
-    IF v_transicion_valida = 0 THEN
-        RAISE EXCEPTION 'Transición de estado no permitida de % a %', 
-                        OLD."estadoActualId", NEW."estadoActualId";
-    END IF;
-    
-    -- Verificar si el usuario tiene el rol permitido
+    -- Obtener el rol del usuario responsable
     SELECT u.rol::TEXT INTO v_rol_usuario
     FROM "User" u 
     WHERE u.id = NEW."responsableId";
-    
-    IF v_roles_permitidos IS NOT NULL AND v_rol_usuario !~ v_roles_permitidos THEN
-        RAISE EXCEPTION 'El usuario con rol % no tiene permiso para esta transición (roles permitidos: %)', 
-                        v_rol_usuario, v_roles_permitidos;
+
+    -- Permitir cualquier transición si el usuario es UV (superadmin)
+    IF v_rol_usuario = 'UV' THEN
+        RETURN NEW;
     END IF;
-    
+
+    -- Verificar si la transición está permitida
+    SELECT COUNT(*)
+    INTO v_transicion_valida
+    FROM "TransicionEstado" te
+    WHERE 
+        te."estadoDesdeId" = OLD."estadoActualId"
+        AND te."estadoHaciaId" = NEW."estadoActualId"
+        AND (
+            te."rolesPermitidos" IS NULL 
+            OR te."rolesPermitidos" ~ ('(^|,)' || v_rol_usuario || '(,|$)')
+        );
+
+    IF v_transicion_valida = 0 THEN
+        RAISE EXCEPTION 'Transición de estado no permitida de % a % para el rol %', 
+                        OLD."estadoActualId", NEW."estadoActualId", v_rol_usuario;
+    END IF;
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger para validar transiciones cuando se actualiza un modem
+DROP TRIGGER IF EXISTS validar_transicion_modem ON "Modem";
 CREATE TRIGGER validar_transicion_modem
 BEFORE UPDATE OF "estadoActualId" ON "Modem"
 FOR EACH ROW
@@ -45,6 +49,9 @@ EXECUTE FUNCTION validar_transicion_estado();
 CREATE OR REPLACE FUNCTION registrar_transicion_estado()
 RETURNS TRIGGER AS $$
 BEGIN
+    RAISE NOTICE 'modemId: %, estadoAnteriorId: %, estadoNuevoId: %, fase: %, evento: %, userId: %',
+        NEW.id, OLD."estadoActualId", NEW."estadoActualId", NEW."faseActual", TG_ARGV[0]::TEXT, COALESCE(NEW."responsableId", 1);
+
     INSERT INTO "EstadoTransicion" (
         "modemId", 
         "estadoAnteriorId", 
@@ -59,14 +66,14 @@ BEGIN
         OLD."estadoActualId",
         NEW."estadoActualId",
         NEW."faseActual",
-        TG_ARGV[0]::TEXT, -- evento pasado como argumento
-        NEW."responsableId",
+        TG_ARGV[0]::TEXT,
+        COALESCE(NEW."responsableId", 1),
         NOW()
     );
-    
+
     -- Actualizar timestamp de última modificación
     NEW."updatedAt" = NOW();
-    
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

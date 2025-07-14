@@ -12,9 +12,8 @@ BEGIN
         UNION SELECT 'TEST_INICIAL', 2
         UNION SELECT 'COSMETICA', 3
         UNION SELECT 'LIBERACION_LIMPIEZA', 4
-        UNION SELECT 'ENSAMBLE', 5 -- Nueva fase añadida
-        UNION SELECT 'RETEST', 6
-        UNION SELECT 'EMPAQUE', 7
+        UNION SELECT 'RETEST', 5
+        UNION SELECT 'EMPAQUE', 6
     )
     SELECT orden INTO v_orden_antiguo
     FROM fase_orden WHERE fase = OLD."faseActual"::TEXT;

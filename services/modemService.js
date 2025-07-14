@@ -12,13 +12,12 @@ const prisma = new PrismaClient();
  */
 export async function validarTransicionFase(faseActual, faseNueva, estadoNuevo = null) {
   const ordenes = {
-    REGISTRO: 1,
+    ALMACEN: 1,
     TEST_INICIAL: 2,
     COSMETICA: 3,
     LIBERACION_LIMPIEZA: 4,
-    ENSAMBLE: 5,
-    RETEST: 6,
-    EMPAQUE: 7
+    RETEST: 5,
+    EMPAQUE: 6
   };
 
   const ordenActual = ordenes[faseActual];
