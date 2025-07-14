@@ -67,13 +67,23 @@ model User {
 
 // Catálogo de SKUs/Productos
 model CatalogoSKU {
-  id          Int       @id @default(autoincrement())
+  id          Int       @id
   nombre      String    @unique
   descripcion String?
   lotes       Lote[]
   modems      Modem[]
+  vistas      VistaPorSKU[] 
 }
+// tabla para renderizado de vistas segun sku 
+model VistaPorSKU {
+  id        Int    @id @default(autoincrement())
+  skuId     Int
+  rol       Rol
+  vista     String       // nombre del archivo .ejs que se va a renderizar
+  sku       CatalogoSKU  @relation(fields: [skuId], references: [id])
 
+  @@unique([skuId, rol]) // Cada combinación SKU + ROL debe ser única
+}
 // Lotes de trabajo
 model Lote {
   id            Int          @id @default(autoincrement())
