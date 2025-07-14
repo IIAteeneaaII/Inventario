@@ -1,40 +1,31 @@
 -- Función para obtener las transiciones disponibles para un modem
-CREATE OR REPLACE FUNCTION obtener_transiciones_disponibles(p_modem_id INTEGER, p_usuario_id INTEGER)
-RETURNS TABLE(
-    transicion_id INTEGER,
-    nombre_evento TEXT,
-    descripcion TEXT,
-    requiere_cantidad BOOLEAN,
-    requiere_observacion BOOLEAN
-) AS $$
+CREATE OR REPLACE FUNCTION obtener_transiciones_disponibles(
+    p_modem_id INTEGER,
+    p_user_id INTEGER
+)
+RETURNS TABLE(nombre_evento TEXT) AS $$
 DECLARE
     v_estado_actual_id INTEGER;
     v_rol_usuario TEXT;
 BEGIN
-    -- Obtener el estado actual del modem
+    -- Obtener el estado actual del módem
     SELECT m."estadoActualId" INTO v_estado_actual_id
     FROM "Modem" m WHERE m.id = p_modem_id;
-    
+
     -- Obtener el rol del usuario
     SELECT u.rol::TEXT INTO v_rol_usuario
-    FROM "User" u WHERE u.id = p_usuario_id;
-    
+    FROM "User" u WHERE u.id = p_user_id;
+
     -- Devolver las transiciones disponibles según el estado y rol
     RETURN QUERY
-    SELECT 
-        te.id as transicion_id,
-        te."nombreEvento",
-        te.descripcion,
-        te."requiereCantidad",
-        te."requiereObservacion"
-    FROM 
-        "TransicionEstado" te
-    WHERE 
-        te."estadoDesdeId" = v_estado_actual_id
-        AND (
-            te."rolesPermitidos" IS NULL 
-            OR te."rolesPermitidos" ~ v_rol_usuario
-        );
+    SELECT te."nombreEvento"
+    FROM "TransicionEstado" te
+    WHERE te."estadoDesdeId" = v_estado_actual_id
+      AND (
+        te."rolesPermitidos" IS NULL
+        OR te."rolesPermitidos" ~ ('(^|,)' || v_rol_usuario || '(,|$)')
+        OR v_rol_usuario = 'UV'
+      );
 END;
 $$ LANGUAGE plpgsql;
 
@@ -135,6 +126,7 @@ BEGIN
         p_usuario_id,
         NOW()
     );
+    
     
     RETURN TRUE;
 END;

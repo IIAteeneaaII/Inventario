@@ -34,38 +34,40 @@ BEGIN
         ELSIF TG_OP = 'DELETE' THEN
             v_detalle := 'Eliminación del dispositivo con SN: ' || OLD.sn;
         END IF;
-    ELSIF v_entidad = 'LoteSku' THEN
+    ELSIF v_entidad = 'Lote' THEN
         IF TG_OP = 'INSERT' THEN
-            v_detalle := 'Creación de nuevo loteSku: ' || NEW.numero;
+            v_detalle := 'Creación de nuevo lote: ' || NEW.numero;
         ELSIF TG_OP = 'UPDATE' THEN
             IF OLD.estado IS DISTINCT FROM NEW.estado THEN
-                v_detalle := 'Actualización de estado del loteSku: ' || NEW.numero;
+                v_detalle := 'Actualización de estado del lote: ' || NEW.numero;
             ELSE
                 RETURN NEW;
             END IF;
         ELSIF TG_OP = 'DELETE' THEN
-            v_detalle := 'Eliminación del loteSku: ' || OLD.numero;
+            v_detalle := 'Eliminación del lote: ' || OLD.numero;
         END IF;
     END IF;
 
     -- Insertar registro en Log
-    INSERT INTO "Log" (
-        accion,
-        entidad,
-        detalle,
-        "userId",
-        "createdAt"
-    )
-    VALUES (
-        v_accion,
-        v_entidad,
-        v_detalle,
-        CASE 
-            WHEN TG_OP = 'DELETE' THEN 1
-            ELSE COALESCE(NEW."responsableId", NEW."userId", 1)
-        END,
-        NOW()
-    );
+    -- INSERT INTO "Log" (
+    --     accion,
+    --     entidad,
+    --     detalle,
+    --     "userId",
+    --     "createdAt"
+    -- )
+    -- VALUES (
+    --     v_accion,
+    --     v_entidad,
+    --     v_detalle,
+    --     CASE
+    --         WHEN v_entidad = 'Registro' THEN COALESCE(NEW."userId", 1)
+    --         WHEN v_entidad = 'Modem' THEN COALESCE(NEW."responsableId", OLD."responsableId", 1)
+    --         WHEN v_entidad = 'Lote' THEN COALESCE(NEW."responsableId", OLD."responsableId", 1)
+    --         ELSE 1
+    --     END,
+    --     NOW()
+    -- );
 
     IF TG_OP = 'DELETE' THEN
         RETURN OLD;
@@ -82,10 +84,10 @@ AFTER INSERT OR UPDATE OR DELETE ON "Modem"
 FOR EACH ROW
 EXECUTE FUNCTION registrar_actividad_log();
 
--- Trigger para LoteSku
-DROP TRIGGER IF EXISTS log_lotesku_cambios ON "LoteSku";
-CREATE TRIGGER log_lotesku_cambios
-AFTER INSERT OR UPDATE OR DELETE ON "LoteSku"
+-- Trigger para Lote
+DROP TRIGGER IF EXISTS log_lote_cambios ON "Lote";
+CREATE TRIGGER log_lote_cambios
+AFTER INSERT OR UPDATE OR DELETE ON "Lote"
 FOR EACH ROW
 EXECUTE FUNCTION registrar_actividad_log();
 

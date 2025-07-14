@@ -1,33 +1,9 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const bcrypt = require('bcrypt');
+
 
 async function main() {
-  const emailAdmin = 'ramelectronics@proton.me';
-  const passwordPlain = 'ñhDTmbP6YkT_ñ';
-
-  // Crear hash seguro para la contraseña
-  const passwordHash = await bcrypt.hash(passwordPlain, 10);
-
-  // Buscar usuario existente
-  const existing = await prisma.user.findUnique({ where: { email: emailAdmin } });
-
-  if (!existing) {
-    // Crear usuario administrador
-    await prisma.user.create({
-      data: {
-        nombre: 'Administrador Principal',
-        email: emailAdmin,
-        password: passwordHash,
-        rol: 'UAI',
-        userName: 'admin',
-      },
-    });
-    console.log('Usuario administrador creado');
-  } else {
-    console.log('Usuario administrador ya existe');
-  }
-
+  
   // Seed de CatalogoSKU
   const skuData = [
     { id: 3, nombre: "4KM36A", skuItem: "81809" },
@@ -48,23 +24,26 @@ async function main() {
 
   for (const item of skuData) {
     await prisma.catalogoSKU.upsert({
-      where: { id: item.id },
+      where: { nombre: item.nombre },
       update: {},
-      create: item,
+      create: {
+        nombre: item.nombre,
+        // descripcion: '...', // Si tienes descripción
+      },
     });
   }
   console.log('CatalogoSKU seed completado');
 
-  // Seed de Estados/Fases principales
+  // Seed de Estados/Fases principales (usa solo nombres en mayúsculas y subrayado)
   const estados = [
-    { id: 1, nombre: "TestInicial", codigoInterno: "TI" },
-    { id: 2, nombre: "Cosmetica", codigoInterno: "COS" },
-    { id: 3, nombre: "Limpieza", codigoInterno: "LIM" },
-    { id: 4, nombre: "LiberacionLimpieza", codigoInterno: "LL" },
-    { id: 5, nombre: "Retest", codigoInterno: "RET" },
-    { id: 6, nombre: "Empaque", codigoInterno: "EMP" },
-    { id: 7, nombre: "Scrap", codigoInterno: "SCR" },
-    { id: 8, nombre: "Reparacion", codigoInterno: "REP" },
+    { id: 0, nombre: "REGISTRO", codigoInterno: "REG" },
+    { id: 1, nombre: "TEST_INICIAL", codigoInterno: "TI" },
+    { id: 2, nombre: "COSMETICA", codigoInterno: "COS" },
+    { id: 3, nombre: "LIBERACION_LIMPIEZA", codigoInterno: "LL" },
+    { id: 4, nombre: "RETEST", codigoInterno: "RET" },
+    { id: 5, nombre: "EMPAQUE", codigoInterno: "EMP" },
+    { id: 6, nombre: "SCRAP", codigoInterno: "SCR" },
+    { id: 7, nombre: "REPARACION", codigoInterno: "REP" },
   ];
 
   for (const estado of estados) {
@@ -84,59 +63,143 @@ async function main() {
   // Seed de Transiciones permitidas usando los IDs de estado
   const transiciones = [];
   let idTrans = 1;
-  // Flujo principal
+  // Flujo principal (ahora inicia en Almacen)
   const flow = [
-    "TestInicial", "Cosmetica", "Limpieza", "LiberacionLimpieza", "Retest", "Empaque"
+    "REGISTRO", "TEST_INICIAL", "COSMETICA", "LIBERACION_LIMPIEZA", "RETEST", "EMPAQUE"
   ];
+  // Define los roles permitidos para cada transición
+  const rolesPorTransicion = {
+    "REGISTRO->TEST_INICIAL": "UA,UV", // Almacén y superadmin
+    "TEST_INICIAL->COSMETICA": "UTI,UV",
+    "COSMETICA->LIBERACION_LIMPIEZA": "UC,UV",
+    "LIBERACION_LIMPIEZA->RETEST": "ULL,UV",
+    "RETEST->EMPAQUE": "UR,UV",
+    "EMPAQUE->SCRAP": "UE,UV",
+    // Scrap y Reparacion pueden tener reglas propias
+  };
+
   for (let i = 0; i < flow.length - 1; i++) {
     const from = flow[i];
     const to = flow[i + 1];
+    const key = `${from}->${to}`;
+    const roles = rolesPorTransicion[key] || "UV"; // Por defecto solo superadmin
+
     // Completar
-    transiciones.push({ id: idTrans++, estadoDesdeId: estadoMap[from], estadoHaciaId: estadoMap[to], nombreEvento: `Completar ${from}`, rolesPermitidos: "U.Reg, UV" });
-    // Scrap
-    if (from !== "Empaque") {
-      transiciones.push({ id: idTrans++, estadoDesdeId: estadoMap[from], estadoHaciaId: estadoMap["Scrap"], nombreEvento: `Rechazar ${from}`, rolesPermitidos: "U.Reg, UV" });
+    transiciones.push({
+      id: idTrans++,
+      estadoDesdeId: estadoMap[from],
+      estadoHaciaId: estadoMap[to],
+      nombreEvento: `Completar ${from}`,
+      rolesPermitidos: roles
+    });
+
+    // Scrap (permitir mandar a scrap desde cualquier estado excepto Empaque)
+    if (from !== "EMPAQUE") {
+      let rolesScrap = "UA,UTI,UC,ULL,UR,UE,UReg,UV";
+      if (from === "REGISTRO") rolesScrap = "UA,UV";
+      transiciones.push({
+        id: idTrans++,
+        estadoDesdeId: estadoMap[from],
+        estadoHaciaId: estadoMap["SCRAP"],
+        nombreEvento: `Rechazar ${from}`,
+        rolesPermitidos: rolesScrap
+      });
     }
-    // Reparar
-    if (from !== "Empaque") {
-      transiciones.push({ id: idTrans++, estadoDesdeId: estadoMap[from], estadoHaciaId: estadoMap["Reparacion"], nombreEvento: `Reparar ${from}`, rolesPermitidos: "U.Reg, UV" });
+    // Reparar (excepto desde Empaque)
+    if (from !== "EMPAQUE") {
+      transiciones.push({
+        id: idTrans++,
+        estadoDesdeId: estadoMap[from],
+        estadoHaciaId: estadoMap["REPARACION"],
+        nombreEvento: `Reparar ${from}`,
+        rolesPermitidos: "UR,UTI,UV"
+      });
     }
-    // Reintegrar
-    transiciones.push({ id: idTrans++, estadoDesdeId: estadoMap[from], estadoHaciaId: estadoMap[from], nombreEvento: `Reintegrar ${from}`, rolesPermitidos: "U.Reg, UV" });
+    // Reintegrar (excepto desde REGISTRO)
+    if (from !== "REGISTRO") {
+      transiciones.push({
+        id: idTrans++,
+        estadoDesdeId: estadoMap[from],
+        estadoHaciaId: estadoMap[from],
+        nombreEvento: `Reintegrar ${from}`,
+        rolesPermitidos: "UR,UTI,UV"
+      });
+    }
   }
   // Transiciones desde Reparacion: regresar solo al estado de donde vino y a Scrap
-  for (let i = 0; i < flow.length - 1; i++) {
+  for (let i = 1; i < flow.length - 1; i++) {
     const from = flow[i];
-    // Reparacion -> estado anterior
-    transiciones.push({ id: idTrans++, estadoDesdeId: estadoMap["Reparacion"], estadoHaciaId: estadoMap[from], nombreEvento: `Regresar a ${from} desde Reparacion`, rolesPermitidos: "U.Reg, UV" });
+    transiciones.push({
+      id: idTrans++,
+      estadoDesdeId: estadoMap["REPARACION"],
+      estadoHaciaId: estadoMap[from],
+      nombreEvento: `Regresar a ${from} desde Reparacion`,
+      rolesPermitidos: "UR,UTI,UV"
+    });
   }
   // Reparacion -> Scrap
-  transiciones.push({ id: idTrans++, estadoDesdeId: estadoMap["Reparacion"], estadoHaciaId: estadoMap["Scrap"], nombreEvento: `Rechazar desde Reparacion`, rolesPermitidos: "U.Reg, UV" });
+  transiciones.push({
+    id: idTrans++,
+    estadoDesdeId: estadoMap["REPARACION"],
+    estadoHaciaId: estadoMap["SCRAP"],
+    nombreEvento: `Rechazar desde Reparacion`,
+    rolesPermitidos: "UV,UA"
+  });
+
+  // Limpia la tabla antes de insertar (opcional, recomendado)
+  await prisma.transicionEstado.deleteMany({});
 
   for (const trans of transiciones) {
+    if (trans.estadoDesdeId === undefined || trans.estadoHaciaId === undefined) {
+      console.error('Transición con estado undefined:', trans);
+      continue;
+    }
     await prisma.transicionEstado.upsert({
-      where: { id: trans.id },
+      where: { estadoDesdeId_nombreEvento: { estadoDesdeId: trans.estadoDesdeId, nombreEvento: trans.nombreEvento } },
       update: {},
-      create: trans,
+      create: {
+        nombreEvento: trans.nombreEvento,
+        rolesPermitidos: trans.rolesPermitidos,
+        estadoDesde: { connect: { id: trans.estadoDesdeId } },
+        estadoHacia: { connect: { id: trans.estadoHaciaId } },
+      },
     });
   }
   console.log('Transiciones seed completado');
 
-  // Seed de MotivosScrap
-  const motivosScrap = [
-    { id: 1, nombre: "INFESTADO" },
-    { id: 2, nombre: "ELECTRONICA" },
-    { id: 3, nombre: "COSMETICA" },
-  ];
+  // Crea o reemplaza la función obtener_transiciones_disponibles en la base de datos
+  await prisma.$executeRawUnsafe(`
+    CREATE OR REPLACE FUNCTION obtener_transiciones_disponibles(
+        p_modem_id INTEGER,
+        p_user_id INTEGER
+    )
+    RETURNS TABLE(nombre_evento TEXT) AS $$
+    DECLARE
+        v_estado_actual_id INTEGER;
+        v_rol_usuario TEXT;
+    BEGIN
+        -- Obtener el estado actual del módem
+        SELECT m."estadoActualId" INTO v_estado_actual_id
+        FROM "Modem" m WHERE m.id = p_modem_id;
 
-  for (const motivo of motivosScrap) {
-    await prisma.motivoScrap.upsert({
-      where: { id: motivo.id },
-      update: {},
-      create: motivo,
-    });
-  }
-  console.log('MotivosScrap seed completado');
+        -- Obtener el rol del usuario
+        SELECT u.rol::TEXT INTO v_rol_usuario
+        FROM "User" u WHERE u.id = p_user_id;
+
+        -- Devolver las transiciones disponibles según el estado y rol
+        RETURN QUERY
+        SELECT te."nombreEvento"
+        FROM "TransicionEstado" te
+        WHERE te."estadoDesdeId" = v_estado_actual_id
+          AND (
+            te."rolesPermitidos" IS NULL
+            OR te."rolesPermitidos" ~ ('(^|,)' || v_rol_usuario || '(,|$)')
+            OR v_rol_usuario = 'UV'
+          );
+    END;
+    $$ LANGUAGE plpgsql;
+  `);
+
 }
 
 main()

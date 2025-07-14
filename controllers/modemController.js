@@ -8,6 +8,10 @@ export async function actualizarFaseModem(req, res) {
   const userId = req.session?.userId || 'anon';
   const sessionId = req.sessionID;
 
+  if (!modemId || !nuevaFase) {
+    return res.status(400).json({ message: 'Faltan parámetros requeridos.' });
+  }
+
   try {
     const modem = await prisma.modem.findUnique({
       where: { id: modemId }
@@ -25,8 +29,8 @@ export async function actualizarFaseModem(req, res) {
       return res.status(404).json({ message: 'Modem no encontrado' });
     }
 
-    // Validar transición antes de actualizar
-    await validarTransicionFase(modem.faseActual, nuevaFase, estadoNuevo);
+    // Validar transición antes de actualizar (pasa userId si tu lógica lo requiere)
+    await validarTransicionFase(modem.faseActual, nuevaFase, estadoNuevo, userId);
 
     // Actualizar fase
     const updatedModem = await prisma.modem.update({
@@ -61,6 +65,60 @@ export async function actualizarFaseModem(req, res) {
       user_id: userId,
       session_id: sessionId,
       modem_id: modemId,
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+    res.status(400).json({ message: error.message });
+  }
+}
+
+export async function iniciarProcesoModem(req, res) {
+  const { sn, skuId } = req.body;
+  const userId = req.session?.userId || 'anon';
+  const sessionId = req.sessionID;
+
+  if (!sn || !skuId) {
+    return res.status(400).json({ message: 'Faltan parámetros requeridos.' });
+  }
+
+  try {
+    // Define los valores iniciales según tu flujo
+    const estadoInicial = 'REGISTRO';
+    const faseInicial = 'REGISTRO';
+
+    // Crea el módem
+    const nuevoModem = await prisma.modem.create({
+      data: {
+        sn,
+        skuId,
+        estado: estadoInicial,
+        faseActual: faseInicial,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    });
+
+    logger.info({
+      operation: 'iniciar_proceso_modem',
+      user_id: userId,
+      session_id: sessionId,
+      modem_id: nuevoModem.id,
+      estado: estadoInicial,
+      fase: faseInicial,
+      timestamp: new Date().toISOString(),
+      metadata: {
+        motivo: 'Inicio de proceso de módem',
+        body: req.body
+      }
+    });
+
+    res.status(201).json({ message: 'Módem creado e iniciado en el proceso', modem: nuevoModem });
+  } catch (error) {
+    logger.error({
+      operation: 'iniciarProcesoModem',
+      user_id: userId,
+      session_id: sessionId,
       error: error.message,
       stack: error.stack,
       timestamp: new Date().toISOString()
