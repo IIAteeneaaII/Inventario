@@ -77,39 +77,35 @@ exports.login = async (req, res) => {
     res.redirect('/');
   }
 };
-
 exports.registrar = async (req, res) => {
-  const { email, password, userName, nombre, rol } = req.body; // ✅ agregar nombre y rol
+
+  const { email, password, userName, nombre, rol, activo } = req.body;
 
   try {
     const exists = await userRepo.findByEmail(email);
     if (exists) {
-      setFlashMessage(res, 'El usuario ya existe', 'error');
-      return res.redirect('/registro_prueba');
+      return res.status(400).json({ error: 'El usuario ya existe' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await userRepo.createUser({
+    await userRepo.createUser({
       email,
       password: hashedPassword,
       userName,
-      nombre,  // ✅ ahora definido
-      rol      // ✅ ahora definido
+      nombre,
+      rol,
+      activo
     });
 
-    createOrUpdateJob(user.id, 'morning', 8);
-    createOrUpdateJob(user.id, 'afternoon', 13);
-    createOrUpdateJob(user.id, 'night', 21);
+    return res.status(200).json({ message: '¡Registro exitoso! Ya puedes iniciar sesión.' });
 
-    setFlashMessage(res, '¡Registro exitoso! Ya puedes iniciar sesión.', 'success');
-    res.redirect('/');
   } catch (err) {
-    console.error(err);
-    setFlashMessage(res, 'Hubo un error en el servidor. Intenta más tarde', 'error');
-    res.redirect('/registro_prueba');
+    console.error('Error en registro_prueba:', err);
+    return res.status(500).json({ error: 'Error interno del servidor al registrar.' });
   }
 };
+
 
 exports.deleteAccount = async (req, res) => {
   const { email, password } = req.body;

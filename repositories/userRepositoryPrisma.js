@@ -14,7 +14,8 @@ exports.createUser = async (user) => {
       password: user.password,
       userName: user.userName,
       nombre: user.nombre,   // Aquí pasas el valor real
-      rol: user.rol          //También debe tener valor
+      rol: user.rol,          //También debe tener valor
+      activo: user.activo
     }
   });
 };
