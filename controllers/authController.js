@@ -77,14 +77,14 @@ exports.login = async (req, res) => {
     res.redirect('/');
   }
 };
-exports.registrar = async (req, res) => {
 
+exports.registrar = async (req, res) => {
   const { email, password, userName, nombre, rol, activo } = req.body;
 
   try {
     const exists = await userRepo.findByEmail(email);
     if (exists) {
-      return res.status(400).json({ error: 'El usuario ya existe' });
+      return res.status(400).json({ success: false, message: 'El usuario ya existe' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -98,13 +98,14 @@ exports.registrar = async (req, res) => {
       activo
     });
 
-    return res.status(200).json({ message: '¡Registro exitoso! Ya puedes iniciar sesión.' });
+    return res.status(200).json({ success: true, message: '¡Registro exitoso! Ya puedes iniciar sesión.' });
 
   } catch (err) {
     console.error('Error en registro_prueba:', err);
-    return res.status(500).json({ error: 'Error interno del servidor al registrar.' });
+    return res.status(500).json({ success: false, message: 'Error interno del servidor al registrar.' });
   }
 };
+
 
 
 exports.deleteAccount = async (req, res) => {
