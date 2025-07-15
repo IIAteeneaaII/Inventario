@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Panel Administrador - Gestión de Usuarios</title>
-  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="stylesheet" href="/css/admin_dashborad.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -23,27 +23,10 @@
         <div class="user-icon">A</div>
         <div>
           <div class="username">Administrador</div>
-          <div class="user-role">Rol: UV</div>
+          <div class="user-role">Rol: UAI</div>
         </div>
       </div>
     </div>
-   <section id="listaUsuarios">
-      <h2>Usuarios registrados</h2>
-      <div class="table-container">
-        <table class="usuarios-table">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Usuario</th>
-              <th>Email</th>
-              <th>Rol</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="usuariosTableBody"></tbody>
-        </table>
-      </div>
-    </section>
 
     <section id="crearUsuario" class="form-section">
       <h2>Crear nuevo usuario</h2>
@@ -64,9 +47,9 @@
           <label for="password">Contraseña:</label>
           <input type="password" id="password" required minlength="8" />
         </div>
-                <div class="input-group">
+        <div class="input-group">
           <label for="password">Confirmar contraseña:</label>
-          <input type="password" id="password" required minlength="8" />
+          <input type="password" id="passwordConfirm" required minlength="8" />
         </div>
         <div class="input-group">
           <label for="rol">Rol:</label>
@@ -85,6 +68,25 @@
           <span class="btn-icon">+</span> Crear usuario
         </button>
       </form>
+
+      <!-- NUEVA SECCIÓN: Usuarios registrados -->
+      <h2>Usuarios registrados</h2>
+      <div class="table-container">
+        <table class="usuarios-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="usuariosTableBody">
+            <!-- Se llenará dinámicamente con JS -->
+          </tbody>
+        </table>
+      </div>
     </section>
   </div>
 
@@ -125,24 +127,22 @@
     </div>
   </div>
 
-    <script>
-      //Funcion temporal de cerrar sesión
-      function cerrarSesion() {
-        Swal.fire({
-          title: "¿Deseas cerrar sesión?",
-          icon: "question",
-          showCancelButton: true,
-          confirmButtonText: "Sí, salir",
-          cancelButtonText: "Cancelar"
-        }).then((result) => {
-          if (result.isConfirmed) {
-            // Aquí podrías limpiar cookies/localStorage si aplica
-            window.location.href = "/login"; // Redirige al login
-          }
-        });
-      }
+  <script>
+    function cerrarSesion() {
+      Swal.fire({
+        title: "¿Deseas cerrar sesión?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Sí, salir",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = "/login";
+        }
+      });
+    }
 
-function mostrarMensaje(texto, tipo) {
+    function mostrarMensaje(texto, tipo) {
       Swal.fire({
         icon: tipo === 'error' ? 'error' : tipo === 'success' ? 'success' : 'info',
         title: texto,
@@ -158,6 +158,9 @@ function mostrarMensaje(texto, tipo) {
       };
       return roles[codigoRol] || codigoRol;
     }
+
+    let usuarios = [];
+    let nextId = 1;
 
     function renderizarTabla() {
       const tbody = document.getElementById('usuariosTableBody');
@@ -188,10 +191,16 @@ function mostrarMensaje(texto, tipo) {
       const userName = document.getElementById('userName').value;
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('passwordConfirm').value;
       const rol = document.getElementById('rol').value;
 
-      if (!nombre || !userName || !email || !password || !rol) {
+      if (!nombre || !userName || !email || !password || !confirmPassword || !rol) {
         mostrarMensaje('Por favor, complete todos los campos', 'error');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        mostrarMensaje('Las contraseñas no coinciden', 'error');
         return;
       }
 
@@ -289,8 +298,6 @@ function mostrarMensaje(texto, tipo) {
         if (e.target === document.getElementById('modalEditar')) cerrarModal();
       });
     });
-
-    </script>
-  </div>
+  </script>
 </body>
 </html>
