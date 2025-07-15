@@ -43,7 +43,8 @@ validator
       email: document.getElementById('email').value,
       password: document.getElementById('password').value,
       confirmarContrasena: document.getElementById('confirmarContrasena').value,
-      rol: document.getElementById('rol').value
+      rol: document.getElementById('rol').value,
+      activo: true
     };
 
     try {
