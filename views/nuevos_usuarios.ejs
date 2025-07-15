@@ -3,17 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/css/admin.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <title>Panel Administrador - Gestión de Usuarios</title>
-  <style>
-    .usuario-deshabilitado {
-      opacity: 0.5;
-      text-decoration: line-through;
-    }
-  </style>
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
   <div class="admin-container">
@@ -23,22 +17,24 @@
         <p>Gestión de usuarios del sistema</p>
       </div>
       <div class="user-info">
+        <div class="logout-container">
+          <i class="fas fa-right-from-bracket logout-icon" onclick="cerrarSesion()" title="Cerrar sesión"></i>
+        </div>
         <div class="user-icon">A</div>
         <div>
           <div class="username">Administrador</div>
-          <div class="user-role">Rol: UAI</div>
+          <div class="user-role">Rol: UV</div>
         </div>
       </div>
     </div>
-
-    <section id="listaUsuarios">
+   <section id="listaUsuarios">
       <h2>Usuarios registrados</h2>
       <div class="table-container">
         <table class="usuarios-table">
           <thead>
             <tr>
-              <th>ID</th>
               <th>Nombre</th>
+              <th>Usuario</th>
               <th>Email</th>
               <th>Rol</th>
               <th>Acciones</th>
@@ -66,6 +62,10 @@
         </div>
         <div class="input-group">
           <label for="password">Contraseña:</label>
+          <input type="password" id="password" required minlength="8" />
+        </div>
+                <div class="input-group">
+          <label for="password">Confirmar contraseña:</label>
           <input type="password" id="password" required minlength="8" />
         </div>
         <div class="input-group">
@@ -118,216 +118,179 @@
           </select>
         </div>
         <div class="modal-buttons">
-          <button type="submit" class="btn btn-primary">💾 Guardar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
           <button type="button" class="btn btn-secondary" onclick="cerrarModal()">✕ Cancelar</button>
         </div>
       </form>
     </div>
   </div>
 
-  <script>
-  const token = localStorage.getItem('token');
-  if (!token) {
-    Swal.fire("No estás autenticado", "Por favor inicia sesión", "warning").then(() => {
-      window.location.href = "/";
-    });
-  }
+    <script>
+      //Funcion temporal de cerrar sesión
+      function cerrarSesion() {
+        Swal.fire({
+          title: "¿Deseas cerrar sesión?",
+          icon: "question",
+          showCancelButton: true,
+          confirmButtonText: "Sí, salir",
+          cancelButtonText: "Cancelar"
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Aquí podrías limpiar cookies/localStorage si aplica
+            window.location.href = "/login"; // Redirige al login
+          }
+        });
+      }
 
-  const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token
-  };
+function mostrarMensaje(texto, tipo) {
+      Swal.fire({
+        icon: tipo === 'error' ? 'error' : tipo === 'success' ? 'success' : 'info',
+        title: texto,
+        showConfirmButton: false,
+        timer: 2000
+      });
+    }
 
-  let usuarios = [];
+    function obtenerTextoRol(codigoRol) {
+      const roles = {
+        'UAI': 'Administrador (UAI)', 'UReg': 'Registro (UReg)', 'UTI': 'Test Inicial (UTI)',
+        'UC': 'Calidad (UC)', 'ULL': 'Liberación y Limpieza (ULL)', 'UR': 'Re-Test (UR)', 'UE': 'Empaque (UE)'
+      };
+      return roles[codigoRol] || codigoRol;
+    }
 
-  async function cargarUsuarios() {
-    const res = await fetch('/admin/usuarios', { headers });
-    if (res.ok) {
-      usuarios = await res.json();
+    function renderizarTabla() {
+      const tbody = document.getElementById('usuariosTableBody');
+      tbody.innerHTML = '';
+      usuarios.forEach(usuario => {
+        const tr = document.createElement('tr');
+        tr.dataset.id = usuario.id;
+        tr.className = usuario.activo ? '' : 'usuario-deshabilitado';
+        tr.innerHTML = `
+          <td>${usuario.id}</td>
+          <td>${usuario.nombre}</td>
+          <td>${usuario.email}</td>
+          <td><span class="rol-tag">${obtenerTextoRol(usuario.rol)}</span></td>
+          <td>
+            <button class="acciones-btn" onclick="abrirModal(${usuario.id})">✏️ Editar</button>
+            <button class="acciones-btn" onclick="eliminarUsuario(${usuario.id})">🗑️ Eliminar</button>
+            <button class="acciones-btn" onclick="toggleUsuario(${usuario.id})">
+              ${usuario.activo ? '🚫 Deshabilitar' : '✅ Habilitar'}
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function crearUsuario() {
+      const nombre = document.getElementById('nombre').value;
+      const userName = document.getElementById('userName').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const rol = document.getElementById('rol').value;
+
+      if (!nombre || !userName || !email || !password || !rol) {
+        mostrarMensaje('Por favor, complete todos los campos', 'error');
+        return;
+      }
+
+      const nuevoUsuario = { id: nextId++, nombre, userName, email, rol, activo: true };
+      usuarios.push(nuevoUsuario);
       renderizarTabla();
-    } else {
-      mostrarMensaje("Error al cargar usuarios", "error");
-    }
-  }
-
-  function mostrarMensaje(texto, tipo) {
-    Swal.fire({
-      icon: tipo === 'error' ? 'error' : tipo === 'success' ? 'success' : 'info',
-      title: texto,
-      showConfirmButton: false,
-      timer: 2000
-    });
-  }
-
-  function obtenerTextoRol(codigoRol) {
-    const roles = {
-      'UAI': 'Administrador (UAI)', 'UReg': 'Registro (UReg)', 'UTI': 'Test Inicial (UTI)',
-      'UC': 'Calidad (UC)', 'ULL': 'Liberación y Limpieza (ULL)', 'UR': 'Re-Test (UR)', 'UE': 'Empaque (UE)'
-    };
-    return roles[codigoRol] || codigoRol;
-  }
-
-  function renderizarTabla() {
-    const tbody = document.getElementById('usuariosTableBody');
-    tbody.innerHTML = '';
-    usuarios.forEach(usuario => {
-      const tr = document.createElement('tr');
-      tr.dataset.id = usuario.id;
-      tr.className = usuario.activo ? '' : 'usuario-deshabilitado';
-      tr.innerHTML = `
-        <td>${usuario.id}</td>
-        <td>${usuario.nombre}</td>
-        <td>${usuario.email}</td>
-        <td><span class="rol-tag">${obtenerTextoRol(usuario.rol)}</span></td>
-        <td>
-          <button class="acciones-btn" onclick="abrirModal(${usuario.id})">✏️ Editar</button>
-          <button class="acciones-btn" onclick="eliminarUsuario(${usuario.id})">🗑️ Eliminar</button>
-          <button class="acciones-btn" onclick="toggleUsuario(${usuario.id})">
-            ${usuario.activo ? '🚫 Deshabilitar' : '✅ Habilitar'}
-          </button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  async function crearUsuario() {
-    const nombre = document.getElementById('nombre').value.trim();
-    const userName = document.getElementById('userName').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const rol = document.getElementById('rol').value;
-
-    if (!nombre || !userName || !email || !password || !rol) {
-      mostrarMensaje('Por favor, complete todos los campos', 'error');
-      return;
-    }
-
-    const res = await fetch('/admin/usuarios/nuevo', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ nombre, userName, email, password, rol })
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-      mostrarMensaje("Usuario creado", "success");
+      mostrarMensaje(`Usuario "${nombre}" creado exitosamente`, 'success');
       document.getElementById('formCrearUsuario').reset();
-      cargarUsuarios();
-    } else {
-      mostrarMensaje(data.error || "Error creando usuario", "error");
     }
-  }
 
-  async function eliminarUsuario(id) {
-    const usuario = usuarios.find(u => u.id === id);
-    if (!usuario) return;
+    function eliminarUsuario(id) {
+      const usuario = usuarios.find(u => u.id === id);
+      if (!usuario) return;
 
-    const confirm = await Swal.fire({
-      title: `¿Eliminar a "${usuario.nombre}"?`,
-      text: "Esta acción no se puede deshacer",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar"
-    });
-
-    if (confirm.isConfirmed) {
-      const res = await fetch(`/admin/usuarios/${id}`, {
-        method: 'DELETE',
-        headers
+      Swal.fire({
+        title: `¿Eliminar a "${usuario.nombre}"?`,
+        text: "Esta acción no se puede deshacer",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          usuarios = usuarios.filter(u => u.id !== id);
+          renderizarTabla();
+          mostrarMensaje(`Usuario "${usuario.nombre}" eliminado`, 'success');
+        }
       });
-      const data = await res.json();
-      if (res.ok) {
-        mostrarMensaje("Usuario eliminado", "success");
-        cargarUsuarios();
-      } else {
-        mostrarMensaje(data.error || "Error eliminando usuario", "error");
+    }
+
+    function toggleUsuario(id) {
+      const usuario = usuarios.find(u => u.id === id);
+      if (!usuario) return;
+
+      const accion = usuario.activo ? "deshabilitar" : "habilitar";
+
+      Swal.fire({
+        title: `¿Quieres ${accion} a "${usuario.nombre}"?`,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: `Sí, ${accion}`,
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          usuario.activo = !usuario.activo;
+          renderizarTabla();
+          mostrarMensaje(`Usuario "${usuario.nombre}" ha sido ${accion}do`, 'info');
+        }
+      });
+    }
+
+    function abrirModal(userId) {
+      const usuario = usuarios.find(u => u.id === userId);
+      if (usuario) {
+        document.getElementById('editarId').value = usuario.id;
+        document.getElementById('editarNombre').value = usuario.nombre;
+        document.getElementById('editarEmail').value = usuario.email;
+        document.getElementById('editarRol').value = usuario.rol;
+        document.getElementById('modalEditar').style.display = 'flex';
       }
     }
-  }
 
-  async function toggleUsuario(id) {
-    const usuario = usuarios.find(u => u.id === id);
-    if (!usuario) return;
+    function cerrarModal() {
+      document.getElementById('modalEditar').style.display = 'none';
+    }
 
-    const accion = usuario.activo ? "deshabilitar" : "habilitar";
+    function guardarEdicion() {
+      const id = parseInt(document.getElementById('editarId').value);
+      const nombre = document.getElementById('editarNombre').value;
+      const email = document.getElementById('editarEmail').value;
+      const rol = document.getElementById('editarRol').value;
 
-    const confirm = await Swal.fire({
-      title: `¿Quieres ${accion} a "${usuario.nombre}"?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: `Sí, ${accion}`,
-      cancelButtonText: "Cancelar"
-    });
-
-    if (confirm.isConfirmed) {
-      const res = await fetch(`/admin/usuarios/${id}/toggle`, {
-        method: 'PATCH',
-        headers
-      });
-      const data = await res.json();
-      if (res.ok) {
-        mostrarMensaje(`Usuario ${accion}do`, "info");
-        cargarUsuarios();
-      } else {
-        mostrarMensaje(data.error || `Error al ${accion} usuario`, "error");
+      const usuario = usuarios.find(u => u.id === id);
+      if (usuario) {
+        usuario.nombre = nombre;
+        usuario.email = email;
+        usuario.rol = rol;
+        renderizarTabla();
+        mostrarMensaje(`Usuario "${nombre}" actualizado`, 'success');
+        cerrarModal();
       }
     }
-  }
 
-  function abrirModal(userId) {
-    const usuario = usuarios.find(u => u.id === userId);
-    if (usuario) {
-      document.getElementById('editarId').value = usuario.id;
-      document.getElementById('editarNombre').value = usuario.nombre;
-      document.getElementById('editarEmail').value = usuario.email;
-      document.getElementById('editarRol').value = usuario.rol;
-      document.getElementById('modalEditar').style.display = 'flex';
-    }
-  }
-
-  function cerrarModal() {
-    document.getElementById('modalEditar').style.display = 'none';
-  }
-
-  async function guardarEdicion() {
-    const id = document.getElementById('editarId').value;
-    const nombre = document.getElementById('editarNombre').value.trim();
-    const email = document.getElementById('editarEmail').value.trim();
-    const rol = document.getElementById('editarRol').value;
-
-    const res = await fetch(`/admin/usuarios/${id}`, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify({ nombre, email, rol })
+    document.addEventListener('DOMContentLoaded', () => {
+      renderizarTabla();
+      document.getElementById('formCrearUsuario').addEventListener('submit', e => {
+        e.preventDefault();
+        crearUsuario();
+      });
+      document.getElementById('formEditarUsuario').addEventListener('submit', e => {
+        e.preventDefault();
+        guardarEdicion();
+      });
+      document.getElementById('modalEditar').addEventListener('click', e => {
+        if (e.target === document.getElementById('modalEditar')) cerrarModal();
+      });
     });
 
-    const data = await res.json();
-    if (res.ok) {
-      mostrarMensaje("Usuario actualizado", "success");
-      cerrarModal();
-      cargarUsuarios();
-    } else {
-      mostrarMensaje(data.error || "Error actualizando usuario", "error");
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    cargarUsuarios();
-    document.getElementById('formCrearUsuario').addEventListener('submit', e => {
-      e.preventDefault();
-      crearUsuario();
-    });
-    document.getElementById('formEditarUsuario').addEventListener('submit', e => {
-      e.preventDefault();
-      guardarEdicion();
-    });
-    document.getElementById('modalEditar').addEventListener('click', e => {
-      if (e.target === document.getElementById('modalEditar')) cerrarModal();
-    });
-  });
-</script>
-
+    </script>
+  </div>
 </body>
 </html>
