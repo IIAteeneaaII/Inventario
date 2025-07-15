@@ -54,14 +54,32 @@ validator
         body: JSON.stringify(data)
       });
 
-      const msg = await res.text();
-      if (res.ok) {
-        alert('Usuario registrado correctamente');
-        window.location.href = '/';
+      const json = await res.json();
+
+      if (res.ok && json.success) {
+        Swal.fire({
+          title: '¡Registro exitoso!',
+          text: json.message || 'El usuario ha sido creado correctamente.',
+          icon: 'success',
+          confirmButtonText: 'Aceptar'
+        }).then(() => {
+          document.getElementById('formRegistro').reset();
+          validator.refresh(); // Limpia los errores visuales
+        });
       } else {
-        alert('Error al registrar: ' + msg);
+        Swal.fire({
+          title: 'Error al registrar',
+          text: json.message || 'Verifica los datos e intenta nuevamente.',
+          icon: 'error',
+          confirmButtonText: 'Entendido'
+        });
       }
     } catch (err) {
-      alert('Error de red: ' + err.message);
+      Swal.fire({
+        title: 'Error de red',
+        text: err.message,
+        icon: 'error',
+        confirmButtonText: 'Cerrar'
+      });
     }
   });
