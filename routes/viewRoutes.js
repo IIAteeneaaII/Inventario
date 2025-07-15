@@ -117,5 +117,12 @@ router.get('/Registros',
   }
 );
 
+router.get('/terminos', 
+  verificarAuth,   
+  verificarRol(['UA', 'UV', 'UTI', 'UR', 'UC', 'UE', 'ULL','UReg', 'UAI']), 
+  (req, res) => {
+      res.render('terminos', { user: req.user });
+  }
+);
 
 module.exports = router;
