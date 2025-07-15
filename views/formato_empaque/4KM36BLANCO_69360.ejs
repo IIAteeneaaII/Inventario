@@ -17,7 +17,7 @@
     </div>
 
     <div class="form-section">
-      <h1>4K M36 AZUL - 81809</h1>
+      <h1>4K M36 BLANCO - 69360</h1>
 
       <div class="form-group">
         <label>Escanear:</label>
@@ -88,10 +88,33 @@
       </div>
     </div>
   </div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  // Función para descargar la tabla en formato .xls
+  document.getElementById("descargar-btn").addEventListener("click", function () {
+    const tabla = document.querySelector(".registros-table");
+    if (!tabla) {
+      Swal.fire("Error", "No se encontró la tabla de registros.", "error");
+      return;
+    }
 
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script>
-    // (Tu script JavaScript permanece igual aquí)
-  </script>
+    const tablaHTML = tabla.outerHTML.replace(/ /g, '%20');
+
+    const nombreArchivo = 'Empaque_4K M36 Blanco.xls';
+
+    const enlaceDescarga = document.createElement('a');
+    enlaceDescarga.href = 'data:application/vnd.ms-excel,' + tablaHTML;
+    enlaceDescarga.download = nombreArchivo;
+
+    document.body.appendChild(enlaceDescarga);
+    enlaceDescarga.click();
+    document.body.removeChild(enlaceDescarga);
+  });
+
+  // Lógica de botón de regreso
+  document.getElementById("volver-btn").addEventListener("click", function () {
+    window.history.back();
+  });
+</script>
 </body>
 </html>

@@ -219,6 +219,58 @@ input[type="text"]:focus, select:focus {
     font-weight: bold;
     color: #ffffff;
 }
+
+ /* Estilos adicionales para el selector de SKU */
+        .lote-selector {
+            margin: 20px auto;
+            width: 95%;
+            max-width: 500px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .lote-selector label {
+            font-weight: bold;
+            color: #365a66;
+            font-size: 1.1em;
+        }
+        
+        .lote-selector select {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #66b3b7;
+            border-radius: 6px;
+            font-size: 1em;
+            background-color: white;
+            color: #333;
+        }
+        
+        .lote-selector select:focus {
+            outline: none;
+            border-color: #4e8c8f;
+            box-shadow: 0 0 0 2px rgba(78, 140, 143, 0.2);
+        }
+        
+        .lote-info {
+            background-color: #f0f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px auto;
+            width: 95%;
+            max-width: 800px;
+            border-left: 4px solid #66b3b7;
+        }
+        
+        .lote-info p {
+            margin: 5px 0;
+            color: #2a7d7f;
+        }
+        
+        .lote-info strong {
+            color: #365a66;
+        }
+
 /* Estilos para la tabla de registros */
 .registros-table {
     width: 100%;

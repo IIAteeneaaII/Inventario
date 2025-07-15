@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CAPTURA NÚMEROS DE SERIE</title>
-  <link rel="stylesheet" href="/css/formatoC.css" />
+  <link rel="stylesheet" href="/Inventario-main/public/css/formatoC.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
 </head>
@@ -91,7 +91,31 @@
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
-    // (Tu script JavaScript permanece igual aquí)
+  // Función para descargar la tabla en formato .xls
+  document.getElementById("descargar-btn").addEventListener("click", function () {
+    const tabla = document.querySelector(".registros-table");
+    if (!tabla) {
+      Swal.fire("Error", "No se encontró la tabla de registros.", "error");
+      return;
+    }
+
+    const tablaHTML = tabla.outerHTML.replace(/ /g, '%20');
+
+    const nombreArchivo = 'Empaque_Extender Huauwei.xls';
+
+    const enlaceDescarga = document.createElement('a');
+    enlaceDescarga.href = 'data:application/vnd.ms-excel,' + tablaHTML;
+    enlaceDescarga.download = nombreArchivo;
+
+    document.body.appendChild(enlaceDescarga);
+    enlaceDescarga.click();
+    document.body.removeChild(enlaceDescarga);
+  });
+
+  // Lógica de botón de regreso
+  document.getElementById("volver-btn").addEventListener("click", function () {
+    window.history.back();
+  });
   </script>
 </body>
 </html>
