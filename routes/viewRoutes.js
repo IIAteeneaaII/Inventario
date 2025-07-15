@@ -17,6 +17,15 @@ router.get('/adminventario',
       res.render('admin_dashboard', { user: req.user });
   }
 );
+// Dashboard para rol Admin inventario
+router.get('/totales', 
+  verificarAuth,   
+  verificarRol(['UAI']), 
+  (req, res) => {
+      res.render('resumen_totales', { user: req.user });
+  }
+);
+
 // Dashboard para rol registro
 router.get('/registro', 
   verificarAuth,   
