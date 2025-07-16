@@ -133,6 +133,5 @@ app.listen(PORT, HOST, async () => {
   }
 });
 
-app.listen(3000, '0.0.0.0', () => {
-  console.log('Servidor corriendo en puerto 3000');
-});
+const apiRoutes = require('./routes/apiRoutes');
+app.use('/api', apiRoutes);

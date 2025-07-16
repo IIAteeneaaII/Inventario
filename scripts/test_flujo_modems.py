@@ -94,6 +94,82 @@ def mostrar_resumen(cur):
     for sku, cantidad in get_modems_por_sku(cur):
         print(f"{sku}: {cantidad}")
 
+def crear_lote(cur, sku_id, responsable_id, estado='REGISTRO'):
+    from time import time
+    numero = f"L{int(time())}-{sku_id}"
+    cur.execute("""
+        INSERT INTO "Lote" (numero, "skuId", estado, "responsableId", "createdAt", "updatedAt")
+        VALUES (%s, %s, %s, %s, NOW(), NOW())
+        RETURNING id, numero, estado
+    """, (numero, sku_id, estado, responsable_id))
+    return cur.fetchone()
+
+def asignar_modem_a_lote(cur, sn, sku_id, lote_id, responsable_id, estado='REGISTRO'):
+    cur.execute('SELECT id FROM "Estado" WHERE nombre=%s', (estado,))
+    estado_row = cur.fetchone()
+    if not estado_row:
+        print(f"No existe el estado {estado}.")
+        return
+    cur.execute("""
+        UPDATE "Modem"
+        SET "loteId"=%s, "responsableId"=%s, "estadoActualId"=%s, "updatedAt"=NOW()
+        WHERE sn=%s AND "skuId"=%s
+        RETURNING id, sn
+    """, (lote_id, responsable_id, estado_row[0], sn, sku_id))
+    return cur.fetchone()
+
+def mostrar_lotes(cur, estado):
+    cur.execute("""
+        SELECT l.id, l.numero, s.nombre AS sku, l.estado, COUNT(m.id) AS modems
+        FROM "Lote" l
+        JOIN "CatalogoSKU" s ON l."skuId" = s.id
+        LEFT JOIN "Modem" m ON m."loteId" = l.id
+        WHERE l.estado=%s
+        GROUP BY l.id, s.nombre, l.estado
+        ORDER BY l.id DESC
+    """, (estado,))
+    return cur.fetchall()
+
+def unir_lotes_ensamble(cur, lote_ids, responsable_id):
+    # Crea un lote de ensamble y asocia los módems de los lotes seleccionados
+    from time import time
+    numero = f"ENS-{int(time())}"
+    cur.execute("""
+        INSERT INTO "Lote" (numero, estado, "responsableId", "createdAt", "updatedAt")
+        VALUES (%s, %s, %s, NOW(), NOW())
+        RETURNING id, numero
+    """, (numero, 'ENSAMBLE', responsable_id))
+    ensamble = cur.fetchone()
+    ensamble_id = ensamble[0]
+    # Asocia los módems de los lotes seleccionados al nuevo lote de ensamble
+    cur.execute("""
+        UPDATE "Modem"
+        SET "loteId"=%s, "updatedAt"=NOW()
+        WHERE "loteId" = ANY(%s)
+    """, (ensamble_id, lote_ids))
+    return ensamble
+
+def mostrar_resumen_por_etapa_y_lote(cur):
+    cur.execute("""
+        SELECT e.nombre AS etapa, l.numero AS lote, COUNT(m.id) AS cantidad
+        FROM "Modem" m
+        JOIN "Estado" e ON m."estadoActualId" = e.id
+        JOIN "Lote" l ON m."loteId" = l.id
+        GROUP BY e.nombre, l.numero
+        ORDER BY e.nombre, cantidad DESC;
+    """)
+    resultados = cur.fetchall()
+    resumen = {}
+    for etapa, lote, cantidad in resultados:
+        if etapa not in resumen:
+            resumen[etapa] = []
+        resumen[etapa].append((lote, cantidad))
+    for etapa, lotes in resumen.items():
+        total = sum(c for _, c in lotes)
+        print(f"\nEtapa: {etapa} | Total módems: {total}")
+        for lote, cantidad in lotes:
+            print(f"  Lote: {lote} | Cantidad: {cantidad}")
+
 def main():
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
@@ -110,9 +186,14 @@ def main():
         print("1. Mostrar resumen de módems")
         print("2. Hacer transición de estado")
         print("3. Salir")
+        print("4. Crear lote en REGISTRO")
+        print("5. Crear lote en EMPAQUE")
+        print("6. Asignar módem a lote")
+        print("7. Mostrar lotes por estado")
+        print("8. Mover módems de un lote a otro")
         opcion = input("Elige una opción: ").strip()
         if opcion == "1":
-            mostrar_resumen(cur)
+            mostrar_resumen_por_etapa_y_lote(cur)
         elif opcion == "2":
             print("\nEstados disponibles:")
             for idx, est in enumerate(estados):
@@ -155,6 +236,54 @@ def main():
                 print("Error en la selección o transición:", e)
         elif opcion == "3":
             break
+        elif opcion == "4":
+            sku_id = input("SKU ID: ").strip()
+            responsable_id = int(input("Responsable ID: "))
+            lote = crear_lote(cur, sku_id, responsable_id, estado='EN_PROCESO')
+            print("Lote creado:", lote)
+            conn.commit()
+        elif opcion == "5":
+            sku_id = input("SKU ID: ").strip()
+            responsable_id = int(input("Responsable ID: "))
+            lote = crear_lote(cur, sku_id, responsable_id, estado='EN_PROCESO')
+            print("Lote creado:", lote)
+            conn.commit()
+        elif opcion == "6":
+            sku_id = input("SKU ID: ").strip()
+            lote_id = int(input("Lote ID: "))
+            responsable_id = int(input("Responsable ID: "))
+            estado = input("Estado (REGISTRO/EMPAQUE): ").strip().upper()
+            cur.execute("""
+                SELECT id, sn FROM "Modem"
+                WHERE "skuId"=%s AND "estadoActualId"=(SELECT id FROM "Estado" WHERE nombre=%s)
+            """, (sku_id, estado))
+            modems = cur.fetchall()
+            print(f"Se encontraron {len(modems)} módems para asignar.")
+            for modem_id, sn in modems:
+                cur.execute("""
+                    UPDATE "Modem"
+                    SET "loteId"=%s, "responsableId"=%s, "updatedAt"=NOW()
+                    WHERE id=%s
+                """, (lote_id, responsable_id, modem_id))
+            conn.commit()
+            print(f"{len(modems)} módems asignados al lote {lote_id}.")
+        elif opcion == "7":
+            estado = input("Estado de lote a mostrar (EN_PROCESO/PAUSADO/COMPLETADO/CANCELADO): ").strip().upper()
+            lotes = mostrar_lotes(cur, estado)
+            for l in lotes:
+                print(f"Lote {l[1]} (SKU: {l[2]}) Estado: {l[3]} | Modems: {l[4]}")
+        elif opcion == "8":
+            lote_origen = int(input("ID del lote origen: "))
+            lote_destino = int(input("ID del lote destino: "))
+            cur.execute("""
+                UPDATE "Modem"
+                SET "loteId"=%s, "updatedAt"=NOW()
+                WHERE "loteId"=%s
+                RETURNING id, sn
+            """, (lote_destino, lote_origen))
+            modems_actualizados = cur.fetchall()
+            conn.commit()
+            print(f"{len(modems_actualizados)} módems movidos del lote {lote_origen} al lote {lote_destino}.")
         else:
             print("Opción inválida.")
 

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { validationResult } = require('express-validator');
 
 const adminController = require('../controllers/adminController');
 const {
@@ -37,5 +38,20 @@ router.use(verificarRol('UAI'));
 router.get('/usuarios', adminController.listarUsuarios);
 router.post('/usuarios', adminController.crearUsuario);
 router.delete('/usuarios/:id', adminController.eliminarUsuario);
+
+// Middleware para manejar errores de validación
+router.use((req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const mensajes = errors.array().map(err => err.msg).join(' - ');
+    // Si es fetch/ajax, responde JSON
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+      return res.status(400).json({ error: mensajes });
+    }
+    // Si es formulario normal, redirige
+    return res.redirect(`/registro?error=${encodeURIComponent(mensajes)}`);
+  }
+  next();
+});
 
 module.exports = router;

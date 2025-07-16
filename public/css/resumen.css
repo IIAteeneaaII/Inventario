@@ -1,27 +1,26 @@
 /* Modifica estos estilos en tu archivo CSS */
 
-/* Estilos generales - Añade padding-top para bajar todo el contenido */
+/* Estilos generales */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #365a66;
-    margin: 0;
-    padding: 80px 0 20px; /* 80px arriba, 0 lados, 20px abajo */
-    display: flex;
-    justify-content: center;
-    min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f5f7fa;
+  color: #333;
 }
 
 /* Ajusta el contenedor principal */
 .app-container {
-    display: flex;
-    width: 95%;
-    max-width: 1200px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin: 0 auto; /* Centra el contenedor */
-    overflow: hidden;
-    min-height: calc(100vh - 100px); /* Ajusta la altura */
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  width: 95%;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  min-height: calc(100vh - 100px); /* Ajusta la altura */
 }
 
 /* Barra superior fija */
@@ -65,8 +64,6 @@ body {
     flex-direction: column;
     overflow-y: auto;
 }
-/* Estilos generales */
-
 
 /* Sección del formulario */
 .form-section {
@@ -79,12 +76,9 @@ body {
 
 
 h1 {
-    color: #333;
-    font-size: 1.5em;
-    margin-bottom: 20px;
-    text-align: center;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #365a66;
+    color: #0f5a7d;
+    font-size: 1.8rem;
+    margin: 0;
 }
 
 /* Estilos para los grupos de formulario */
@@ -303,6 +297,14 @@ input[type="text"]:focus, select:focus {
 
 /* Contenedor de la tabla con scroll */
 .table-container {
+  overflow-x: auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.table-container {
     flex: 1;
     overflow-y: auto;
     max-height: 70vh;
@@ -334,6 +336,20 @@ input[type="text"]:focus, select:focus {
     .table-container {
         max-height: 50vh;
     }
+    .titulo-con-boton {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .btn-resumen {
+    margin-top: 10px;
+  }
+  
+  .registros-table th,
+  .registros-table td {
+    padding: 10px;
+    font-size: 0.9em;
+  }
 }
         .app-container {
             max-width: 1200px;

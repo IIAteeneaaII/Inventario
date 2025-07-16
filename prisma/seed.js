@@ -27,9 +27,9 @@ async function main() {
       where: { nombre: item.nombre },
       update: {},
       create: {
-        nombre: item.nombre,
-        // descripcion: '...', // Si tienes descripción
-      },
+        id: item.id,
+        nombre: item.nombre
+      }
     });
   }
   console.log('CatalogoSKU seed completado');
