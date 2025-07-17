@@ -258,4 +258,130 @@ router.get('/stats/sku-detalle', verificarAuth, async (req, res) => {
     }
 });
 
+// Endpoint para datos filtrados por SKU para el dashboard principal
+router.get('/stats/dashboard-filtered', verificarAuth, async (req, res) => {
+  try {
+    const { skuNombre } = req.query;
+    const dias = parseInt(req.query.dias || 30);
+
+    // Buscar el ID del SKU si se proporciona un nombre
+    let skuId = null;
+    if (skuNombre && skuNombre !== 'todos') {
+      const skuInfo = await prisma.catalogoSKU.findFirst({
+        where: { nombre: skuNombre },
+        select: { id: true }
+      });
+      if (skuInfo) {
+        skuId = skuInfo.id;
+      }
+    }
+
+    // Obtener el total de modems para el SKU seleccionado o todos
+    const totalModems = await prisma.modem.count({
+      where: {
+        deletedAt: null,
+        ...(skuId ? { skuId: skuId } : {})
+      }
+    });
+
+    // Construir consultas SQL basadas en si hay un SKU seleccionado o no
+    let distribucionSKU, modemsRegistradosPorDia, distribucionLotes, estadoPorFase;
+
+    if (skuId) {
+      // Consultas con filtro de SKU
+      [distribucionSKU, modemsRegistradosPorDia, distribucionLotes, estadoPorFase] = await Promise.all([
+        prisma.$queryRaw`
+          SELECT c.nombre, CAST(COUNT(*) AS INTEGER) as cantidad 
+          FROM "Modem" m 
+          JOIN "CatalogoSKU" c ON m."skuId" = c.id 
+          WHERE m."deletedAt" IS NULL AND m."skuId" = ${skuId}
+          GROUP BY c.nombre
+          ORDER BY COUNT(*) DESC
+        `,
+        prisma.$queryRaw`
+          SELECT DATE_TRUNC('day', m."createdAt")::date as fecha, CAST(COUNT(*) AS INTEGER) as cantidad
+          FROM "Modem" m
+          WHERE m."createdAt" > NOW() - INTERVAL '${dias} days'
+            AND m."deletedAt" IS NULL
+            AND m."skuId" = ${skuId}
+          GROUP BY DATE_TRUNC('day', m."createdAt")::date
+          ORDER BY fecha
+        `,
+        prisma.$queryRaw`
+          SELECT l.numero, l.estado, CAST(COUNT(*) AS INTEGER) as cantidad 
+          FROM "Modem" m 
+          JOIN "Lote" l ON m."loteId" = l.id 
+          WHERE m."deletedAt" IS NULL
+            AND m."skuId" = ${skuId}
+          GROUP BY l.numero, l.estado
+          ORDER BY COUNT(*) DESC
+          LIMIT 10
+        `,
+        prisma.$queryRaw`
+          SELECT m."faseActual", e.nombre as estado, CAST(COUNT(*) AS INTEGER) as cantidad 
+          FROM "Modem" m 
+          JOIN "Estado" e ON m."estadoActualId" = e.id 
+          WHERE m."deletedAt" IS NULL
+            AND m."skuId" = ${skuId}
+          GROUP BY m."faseActual", e.nombre
+          ORDER BY m."faseActual", COUNT(*) DESC
+        `
+      ]);
+    } else {
+      // Consultas sin filtro de SKU (todos)
+      [distribucionSKU, modemsRegistradosPorDia, distribucionLotes, estadoPorFase] = await Promise.all([
+        prisma.$queryRaw`
+          SELECT c.nombre, CAST(COUNT(*) AS INTEGER) as cantidad 
+          FROM "Modem" m 
+          JOIN "CatalogoSKU" c ON m."skuId" = c.id 
+          WHERE m."deletedAt" IS NULL
+          GROUP BY c.nombre
+          ORDER BY COUNT(*) DESC
+        `,
+        prisma.$queryRaw`
+          SELECT DATE_TRUNC('day', m."createdAt")::date as fecha, CAST(COUNT(*) AS INTEGER) as cantidad
+          FROM "Modem" m
+          WHERE m."createdAt" > NOW() - INTERVAL '${dias} days'
+            AND m."deletedAt" IS NULL
+          GROUP BY DATE_TRUNC('day', m."createdAt")::date
+          ORDER BY fecha
+        `,
+        prisma.$queryRaw`
+          SELECT l.numero, l.estado, CAST(COUNT(*) AS INTEGER) as cantidad 
+          FROM "Modem" m 
+          JOIN "Lote" l ON m."loteId" = l.id 
+          WHERE m."deletedAt" IS NULL
+          GROUP BY l.numero, l.estado
+          ORDER BY COUNT(*) DESC
+          LIMIT 10
+        `,
+        prisma.$queryRaw`
+          SELECT m."faseActual", e.nombre as estado, CAST(COUNT(*) AS INTEGER) as cantidad 
+          FROM "Modem" m 
+          JOIN "Estado" e ON m."estadoActualId" = e.id 
+          WHERE m."deletedAt" IS NULL
+          GROUP BY m."faseActual", e.nombre
+          ORDER BY m."faseActual", COUNT(*) DESC
+        `
+      ]);
+    }
+
+    // Crear objeto de respuesta
+    const results = {
+      totalModems,
+      distribucionSKU: replaceBigIntWithNumber(distribucionSKU),
+      modemsRegistradosPorDia: replaceBigIntWithNumber(modemsRegistradosPorDia),
+      distribucionLotes: replaceBigIntWithNumber(distribucionLotes),
+      estadoPorFase: replaceBigIntWithNumber(estadoPorFase),
+      filteredBySku: skuId ? true : false,
+      skuNombre: skuNombre
+    };
+
+    res.json(results);
+  } catch (error) {
+    console.error('Error al obtener estadísticas filtradas:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

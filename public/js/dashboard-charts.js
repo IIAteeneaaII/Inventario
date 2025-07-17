@@ -3,6 +3,14 @@ let skuChart, registrosDiariosChart, estadoFaseChart, skuDetailChart;
 let allData = null;
 let selectedSku = 'todos';
 
+// Función para actualizar el contador total
+function actualizarContadorTotal(total) {
+    const contador = document.getElementById('total-modems-count');
+    if (contador) {
+        contador.textContent = total.toLocaleString();
+    }
+}
+
 // Inicialización al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Inicializando dashboard de gráficas...');
@@ -21,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Registrar evento para el selector de SKU
     document.getElementById('skuSelector')?.addEventListener('change', function() {
         selectedSku = this.value;
-        actualizarDetallesSku();
+        cargarDatosGraficas(); // Actualiza automáticamente al cambiar el SKU
     });
     
     // Carga inicial de datos
@@ -31,17 +39,26 @@ document.addEventListener('DOMContentLoaded', function() {
 // Función para cargar datos
 function cargarDatosGraficas() {
     console.log('Cargando datos de gráficas...');
-    
-    // Mostrar indicadores de carga
+    // Indicador visual en el botón
+    const btnActualizar = document.getElementById('actualizarDatos');
+    if (btnActualizar) {
+        const textoOriginal = btnActualizar.innerHTML;
+        btnActualizar.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Actualizando...';
+        btnActualizar.disabled = true;
+        // Restaurar el botón después de completar la carga
+        setTimeout(() => {
+            btnActualizar.innerHTML = textoOriginal;
+            btnActualizar.disabled = false;
+        }, 1000);
+    }
     mostrarCargando();
     
-    // Obtener el rango de días seleccionado
     const dias = document.getElementById('rangoDias')?.value || 30;
-    
-    console.log(`Solicitando datos para ${dias} días`);
-    
-    // Solicitud a la API
-    fetch(`/api/stats/resumen?dias=${dias}`)
+    const skuSeleccionado = selectedSku;
+    let url = skuSeleccionado === 'todos' 
+        ? `/api/stats/resumen?dias=${dias}` 
+        : `/api/stats/dashboard-filtered?dias=${dias}&skuNombre=${encodeURIComponent(skuSeleccionado)}`;
+    fetch(url)
         .then(response => {
             console.log('Estado de la respuesta:', response.status);
             if (!response.ok) {
@@ -53,19 +70,15 @@ function cargarDatosGraficas() {
         })
         .then(data => {
             console.log('Datos recibidos');
-            
-            // Guardar datos globalmente
+            actualizarContadorTotal(data.totalModems || 
+                (data.distribucionSKU && data.distribucionSKU.length 
+                    ? data.distribucionSKU.reduce((sum, item) => sum + item.cantidad, 0) 
+                    : 0));
             allData = data;
-            
-            // Actualizar selector de SKU
             actualizarSelectorSku(data);
-            
-            // Crear gráficas
             crearGraficaSKU(data.distribucionSKU || []);
             crearGraficaRegistrosDiarios(data.modemsRegistradosPorDia || []);
             crearGraficaEstadoFase(data.estadoPorFase || []);
-            
-            // Actualizar detalles de SKU
             actualizarDetallesSku();
         })
         .catch(error => {
@@ -80,31 +93,70 @@ function actualizarSelectorSku(data) {
     if (!skuSelector) return;
     
     // Guardar SKU actual
-    const currentSku = skuSelector.value;
+    const currentSku = selectedSku;
     
-    // Limpiar opciones actuales excepto la primera (Todos)
-    while (skuSelector.options.length > 1) {
-        skuSelector.remove(1);
-    }
-    
-    // Agregar nuevas opciones si hay datos
-    if (data.distribucionSKU && data.distribucionSKU.length) {
-        data.distribucionSKU.forEach(item => {
-            const option = document.createElement('option');
-            option.value = item.nombre;
-            option.textContent = `${item.nombre} (${item.cantidad})`;
-            skuSelector.appendChild(option);
-        });
+    // Si estamos filtrando por un SKU específico, necesitamos obtener la lista completa de SKUs
+    if (currentSku !== 'todos' || (data.distribucionSKU && data.distribucionSKU.length <= 1)) {
+        // Hacer una petición separada para obtener todos los SKUs disponibles
+        fetch('/api/stats/resumen')
+            .then(res => {
+                if (!res.ok) throw new Error('Error al cargar los SKUs');
+                return res.json();
+            })
+            .then(fullData => {
+                // Limpiar opciones actuales excepto la primera (Todos)
+                while (skuSelector.options.length > 1) {
+                    skuSelector.remove(1);
+                }
+                
+                // Agregar todas las opciones de SKU
+                if (fullData.distribucionSKU && fullData.distribucionSKU.length) {
+                    fullData.distribucionSKU.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.nombre;
+                        option.textContent = `${item.nombre} (${item.cantidad})`;
+                        skuSelector.appendChild(option);
+                    });
+                    
+                    // Restaurar selección
+                    if (currentSku !== 'todos') {
+                        for (let i = 0; i < skuSelector.options.length; i++) {
+                            if (skuSelector.options[i].value === currentSku) {
+                                skuSelector.selectedIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Error al cargar todos los SKUs:', err);
+            });
+    } else {
+        // Si estamos viendo todos los SKUs, simplemente actualizamos las opciones con los datos actuales
+        while (skuSelector.options.length > 1) {
+            skuSelector.remove(1);
+        }
         
-        // Restaurar selección si es posible
-        if (currentSku !== 'todos') {
-            const existe = Array.from(skuSelector.options).some(opt => opt.value === currentSku);
-            if (existe) {
-                skuSelector.value = currentSku;
-                selectedSku = currentSku;
-            } else {
-                skuSelector.value = 'todos';
-                selectedSku = 'todos';
+        // Agregar nuevas opciones si hay datos
+        if (data.distribucionSKU && data.distribucionSKU.length) {
+            data.distribucionSKU.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.nombre;
+                option.textContent = `${item.nombre} (${item.cantidad})`;
+                skuSelector.appendChild(option);
+            });
+            
+            // Restaurar selección si es posible
+            if (currentSku !== 'todos') {
+                const existe = Array.from(skuSelector.options).some(opt => opt.value === currentSku);
+                if (existe) {
+                    skuSelector.value = currentSku;
+                    selectedSku = currentSku;
+                } else {
+                    skuSelector.value = 'todos';
+                    selectedSku = 'todos';
+                }
             }
         }
     }
