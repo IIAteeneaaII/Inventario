@@ -4,6 +4,43 @@ const { verificarAuth, verificarRol } = require('../controllers/authController')
 const { authMiddleware } = require('../middlewares/authMiddleware');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+<<<<<<< Updated upstream
+=======
+
+router.get('/vista/:skuCode', verificarAuth, async (req, res) => {
+  const skuCode = req.params.skuCode;
+  const user = req.user;
+
+  try {
+    // Buscar el SKU en la tabla CatalogoSKU
+    const sku = await prisma.catalogoSKU.findUnique({
+      where: { nombre: skuCode }
+    });
+
+    if (!sku) {
+      return res.status(404).render('404', { message: 'SKU no encontrado' });
+    }
+
+    // Buscar la vista correspondiente al rol del usuario
+    const vistaAsignada = await prisma.vistaPorSKU.findFirst({
+      where: {
+        skuId: sku.id,
+        rol: user.rol
+      }
+    });
+
+    if (!vistaAsignada) {
+      return res.status(403).render('403', { message: 'No tienes acceso a esta vista' });
+    }
+
+    // Renderizar la vista correspondiente
+    return res.render(vistaAsignada.vista, { user });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send('Error interno del servidor');
+  }
+});
+>>>>>>> Stashed changes
 
 // Ruta pública para registro de usuario (debe estar antes de cualquier middleware de autenticación)
 router.get('/registro_prueba', (req, res) => {
@@ -39,7 +76,7 @@ router.get('/seleccionlote',
   verificarRol(['UA', 'UV', 'UTI', 'UR', 'UC', 'UE', 'ULL','UReg']), 
   (req, res) => {
       console.log(`Acceso autorizado: ${req.user.userName} (${req.user.rol}) -> /seleccionlote`);
-      res.render('seleccion_lote', { user: req.user });
+      res.render('seleccion_modelo', { user: req.user });
   }
 );
 
