@@ -4,8 +4,6 @@ const { verificarAuth, verificarRol } = require('../controllers/authController')
 const { authMiddleware } = require('../middlewares/authMiddleware');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-<<<<<<< Updated upstream
-=======
 
 router.get('/vista/:skuCode', verificarAuth, async (req, res) => {
   const skuCode = req.params.skuCode;
@@ -40,7 +38,6 @@ router.get('/vista/:skuCode', verificarAuth, async (req, res) => {
     return res.status(500).send('Error interno del servidor');
   }
 });
->>>>>>> Stashed changes
 
 // Ruta pública para registro de usuario (debe estar antes de cualquier middleware de autenticación)
 router.get('/registro_prueba', (req, res) => {
