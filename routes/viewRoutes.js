@@ -20,9 +20,51 @@ router.get('/adminventario',
   }
 );
 
-// Dashboard para resumen totales
-router.get('/resumen_totales', verificarAuth, verificarRol(['UAI']), (req, res) => {
-  res.render('resumen_totales', { user: req.user });
+// Tabla de contabilidad por SKU (resumen_totales)
+router.get('/resumen_totales', verificarAuth, verificarRol(['UAI']), async (req, res) => {
+  try {
+    const skuData = await prisma.$queryRaw`
+      WITH fases AS (
+        SELECT DISTINCT m."faseActual" 
+        FROM "Modem" m
+        WHERE m."deletedAt" IS NULL
+      ),
+      fase_entrada AS (
+        SELECT MIN(f."faseActual") AS fase_inicial
+        FROM fases f
+      ),
+      fase_salida AS (
+        SELECT MAX(f."faseActual") AS fase_final
+        FROM fases f
+      )
+      SELECT 
+        c.nombre,
+        (SELECT COUNT(*) FROM "Modem" m 
+         WHERE m."skuId" = c.id 
+         AND m."faseActual" = (SELECT fase_inicial FROM fase_entrada)
+         AND m."deletedAt" IS NULL) as entrada,
+        (SELECT COUNT(*) FROM "Modem" m 
+         WHERE m."skuId" = c.id 
+         AND m."faseActual" = (SELECT fase_final FROM fase_salida)
+         AND m."deletedAt" IS NULL) as salida,
+        (SELECT COUNT(*) FROM "Modem" m 
+         WHERE m."skuId" = c.id 
+         AND m."faseActual" NOT IN ((SELECT fase_inicial FROM fase_entrada), (SELECT fase_final FROM fase_salida))
+         AND m."deletedAt" IS NULL) as "enProceso"
+      FROM "CatalogoSKU" c
+      ORDER BY c.nombre
+    `;
+    const processedData = skuData.map(item => ({
+      nombre: item.nombre,
+      entrada: Number(item.entrada),
+      salida: Number(item.salida),
+      enProceso: Number(item.enProceso)
+    }));
+    res.render('resumen_totales', { user: req.user, skuData: processedData });
+  } catch (error) {
+    console.error('Error al cargar datos de resumen_totales:', error);
+    res.render('resumen_totales', { user: req.user, skuData: [] });
+  }
 });
 
 // Dashboard para rol registro
@@ -157,6 +199,7 @@ router.get('/sku/:skuId',
   }
 );
 
+// Vista de gráficas (resumen)
 // Vista resumen con consulta SQL corregida
 router.get('/resumen', verificarAuth, verificarRol(['UAI', 'UA', 'UV']), async (req, res) => {
   try {
@@ -175,7 +218,6 @@ router.get('/resumen', verificarAuth, verificarRol(['UAI', 'UA', 'UV']), async (
         SELECT MAX(f."faseActual") AS fase_final
         FROM fases f
       )
-      
       SELECT 
         c.nombre,
         (SELECT COUNT(*) FROM "Modem" m 
@@ -202,7 +244,7 @@ router.get('/resumen', verificarAuth, verificarRol(['UAI', 'UA', 'UV']), async (
     }));
     res.render('resumen', { 
       user: req.user,
-      skuData: processedData
+      skuData: processedData // Importante: pasar skuData a la plantilla
     });
   } catch (error) {
     console.error('Error al cargar datos de resumen:', error);

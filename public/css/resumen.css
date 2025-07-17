@@ -1,26 +1,27 @@
 /* Modifica estos estilos en tu archivo CSS */
 
-/* Estilos generales */
+/* Estilos generales - Añade padding-top para bajar todo el contenido */
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f5f7fa;
-  color: #333;
+    font-family: Arial, sans-serif;
+    background-color: #365a66;
+    margin: 0;
+    padding: 80px 0 20px; /* 80px arriba, 0 lados, 20px abajo */
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
 }
 
 /* Ajusta el contenedor principal */
 .app-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  display: flex;
-  width: 95%;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  min-height: calc(100vh - 100px); /* Ajusta la altura */
+    display: flex;
+    width: 95%;
+    max-width: 1200px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 0 auto; /* Centra el contenedor */
+    overflow: hidden;
+    min-height: calc(100vh - 100px); /* Ajusta la altura */
 }
 
 /* Barra superior fija */
@@ -64,6 +65,8 @@ body {
     flex-direction: column;
     overflow-y: auto;
 }
+/* Estilos generales */
+
 
 /* Sección del formulario */
 .form-section {
@@ -76,9 +79,12 @@ body {
 
 
 h1 {
-    color: #0f5a7d;
-    font-size: 1.8rem;
-    margin: 0;
+    color: #333;
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #365a66;
 }
 
 /* Estilos para los grupos de formulario */
@@ -213,58 +219,6 @@ input[type="text"]:focus, select:focus {
     font-weight: bold;
     color: #ffffff;
 }
-
- /* Estilos adicionales para el selector de SKU */
-        .lote-selector {
-            margin: 20px auto;
-            width: 95%;
-            max-width: 500px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .lote-selector label {
-            font-weight: bold;
-            color: #365a66;
-            font-size: 1.1em;
-        }
-        
-        .lote-selector select {
-            flex: 1;
-            padding: 10px 15px;
-            border: 1px solid #66b3b7;
-            border-radius: 6px;
-            font-size: 1em;
-            background-color: white;
-            color: #333;
-        }
-        
-        .lote-selector select:focus {
-            outline: none;
-            border-color: #4e8c8f;
-            box-shadow: 0 0 0 2px rgba(78, 140, 143, 0.2);
-        }
-        
-        .lote-info {
-            background-color: #f0f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px auto;
-            width: 95%;
-            max-width: 800px;
-            border-left: 4px solid #66b3b7;
-        }
-        
-        .lote-info p {
-            margin: 5px 0;
-            color: #2a7d7f;
-        }
-        
-        .lote-info strong {
-            color: #365a66;
-        }
-
 /* Estilos para la tabla de registros */
 .registros-table {
     width: 100%;
@@ -297,14 +251,6 @@ input[type="text"]:focus, select:focus {
 
 /* Contenedor de la tabla con scroll */
 .table-container {
-  overflow-x: auto;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
-}
-
-.table-container {
     flex: 1;
     overflow-y: auto;
     max-height: 70vh;
@@ -336,20 +282,6 @@ input[type="text"]:focus, select:focus {
     .table-container {
         max-height: 50vh;
     }
-    .titulo-con-boton {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .btn-resumen {
-    margin-top: 10px;
-  }
-  
-  .registros-table th,
-  .registros-table td {
-    padding: 10px;
-    font-size: 0.9em;
-  }
 }
         .app-container {
             max-width: 1200px;
@@ -467,7 +399,7 @@ input[type="text"]:focus, select:focus {
         .lote-info strong {
             color: #365a66;
         }
-    /*AQUI VA SWEETALERT*/
+
         .swal2-popup {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             border-radius: 10px;
@@ -561,4 +493,42 @@ input[type="text"]:focus, select:focus {
 
 .btn-resumen:hover {
     background-color: #4e8c8f;
+}
+
+/* Nuevos estilos para los botones de guardar */
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.btn-guardar {
+    background-color: #66b3b7;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 20px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-guardar:hover {
+    background-color: #4e8c8f;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-guardar:active {
+    transform: translateY(0);
+}
+
+.btn-guardar i {
+    margin-right: 5px;
 }

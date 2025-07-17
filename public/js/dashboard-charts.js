@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Registrar evento para el botón REGRESAR
     document.getElementById('REGRESAR')?.addEventListener('click', function() {
-        window.location.href = '/adminventario';
+        window.location.href = '/resumen';
     });
     
     // Registrar evento para el botón Actualizar datos
