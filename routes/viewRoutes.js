@@ -4,6 +4,7 @@ const { verificarAuth, verificarRol } = require('../controllers/authController')
 const { authMiddleware } = require('../middlewares/authMiddleware');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const adminController = require('../controllers/adminController');
 
 router.get('/vista/:skuCode', verificarAuth, async (req, res) => {
   const skuCode = req.params.skuCode;
