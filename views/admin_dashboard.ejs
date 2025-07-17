@@ -1,4 +1,4 @@
-```ejs
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -103,7 +103,9 @@
                   <td><%= usuario.email %></td>
                   <td><%= usuario.rol %></td>
                   <td>
-                    <button class="btn-editar" data-id="<%= usuario.id %>">✎ Editar</button>
+                      <a href="/editarusuario/<%= usuario.id %>" class="btn-editar-link">
+                    ✎ Editar
+                      </a>
                     <button class="btn-eliminar" data-id="<%= usuario.id %>">🗑 Eliminar</button>
                   </td>
                 </tr>
@@ -159,10 +161,9 @@
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/just-validate@4.3.0/dist/just-validate.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="/js/swalConfig.js"></script>
   <script src="/js/cerrarsesion.js"></script>
   <script src="/js/admin_dashboard.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>
-```
