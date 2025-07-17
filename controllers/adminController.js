@@ -59,22 +59,23 @@ exports.register = async (req, res) => {
   }
 };
 
-// Listar todos los usuarios sin mostrar contraseñas
 exports.listarUsuarios = async (req, res) => {
   try {
-    const usuarios = await prisma.usuario.findMany({
-      select: {
-        id: true,
-        nombre: true,
-        email: true,
-        rol: true,
-        createdAt: true,
-      },
-    });
-    res.json(usuarios);
+const usuarios = await prisma.user.findMany({
+  select: {
+    id: true,
+    nombre: true,
+    email: true,
+    rol: true
+  }
+});
+
+    console.log("Usuarios consultados:", usuarios); // <--- Agregado para verificar
+
+    res.render('admin_dashboard', { usuarios }); // <-- ENVÍAS A LA VISTA
   } catch (error) {
-    console.error('Error listarUsuarios:', error);
-    res.status(500).json({ error: 'Error al obtener usuarios' });
+    console.error('Error al obtener usuarios:', error);
+    res.status(500).send('Error al cargar la vista de usuarios');
   }
 };
 

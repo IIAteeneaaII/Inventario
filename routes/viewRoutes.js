@@ -47,12 +47,12 @@ router.get('/registro_prueba', (req, res) => {
 
 // Rutas protegidas (para redirigir a los roles)
 // Dashboard para rol Admin inventario
-router.get('/adminventario', 
-  verificarAuth,   
+// routes/view.js (después)
+router.get(
+  '/adminventario', 
+  verificarAuth, 
   verificarRol(['UAI']), 
-  (req, res) => {
-      res.render('admin_dashboard', { user: req.user });
-  }
+  adminController.listarUsuarios    // aquí se hace prisma.findMany + res.render('admin_dashboard',{ usuarios,… })
 );
 
 // Tabla de contabilidad por SKU (resumen_totales)
