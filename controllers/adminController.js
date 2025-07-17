@@ -321,3 +321,22 @@ exports.toggleEstadoUsuario = async (req, res) => {
     return res.status(500).json({ error: 'Error interno al cambiar estado del usuario' });
   }
 };
+// Mostrar vista de edición de usuario por ID
+exports.vistaEditarUsuario = async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+
+  try {
+    const usuario = await prisma.user.findUnique({
+      where: { id }
+    });
+
+    if (!usuario) {
+      return res.status(404).render('404', { mensaje: 'Usuario no encontrado' });
+    }
+
+    res.render('editarusuario', { usuario }); // Tu vista se llama así ✅
+  } catch (error) {
+    console.error('Error al cargar vista de edición:', error);
+    res.status(500).render('error', { mensaje: 'Error interno del servidor' });
+  }
+};
