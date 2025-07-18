@@ -1,621 +1,566 @@
-// Variables globales para las gráficas
-let skuChart, registrosDiariosChart, estadoFaseChart, skuDetailChart;
-let allData = null;
-let selectedSku = 'todos';
+// Dashboard-charts.js - Versión simplificada para resolver problemas de gráficas
 
-// Función para actualizar el contador total
-function actualizarContadorTotal(total) {
-    const contador = document.getElementById('total-modems-count');
-    if (contador) {
-        contador.textContent = total.toLocaleString();
-    }
-}
+// Almacena las instancias de gráficas para su posterior destrucción
+let charts = {};
 
-// Inicialización al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Inicializando dashboard de gráficas...');
-    
-    // Registrar evento para el botón REGRESAR
-    document.getElementById('REGRESAR')?.addEventListener('click', function() {
-        window.location.href = '/resumen';
-    });
-    
-    // Registrar evento para el botón Actualizar datos
-    document.getElementById('actualizarDatos')?.addEventListener('click', cargarDatosGraficas);
-    
-    // Registrar eventos para los selects
-    document.getElementById('rangoDias')?.addEventListener('change', cargarDatosGraficas);
-    
-    // Registrar evento para el selector de SKU
-    document.getElementById('skuSelector')?.addEventListener('change', function() {
-        selectedSku = this.value;
-        cargarDatosGraficas(); // Actualiza automáticamente al cambiar el SKU
-    });
-    
-    // Carga inicial de datos
-    cargarDatosGraficas();
+  console.log('Dashboard inicializando...');
+  
+  // Configurar botones y selectores
+  setupControls();
+  
+  // Cargar datos iniciales
+  loadData(30);
 });
 
-// Función para cargar datos
-function cargarDatosGraficas() {
-    console.log('Cargando datos de gráficas...');
-    // Indicador visual en el botón
-    const btnActualizar = document.getElementById('actualizarDatos');
-    if (btnActualizar) {
-        const textoOriginal = btnActualizar.innerHTML;
-        btnActualizar.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Actualizando...';
-        btnActualizar.disabled = true;
-        // Restaurar el botón después de completar la carga
-        setTimeout(() => {
-            btnActualizar.innerHTML = textoOriginal;
-            btnActualizar.disabled = false;
-        }, 1000);
-    }
-    mostrarCargando();
-    
-    const dias = document.getElementById('rangoDias')?.value || 30;
-    const skuSeleccionado = selectedSku;
-    let url = skuSeleccionado === 'todos' 
-        ? `/api/stats/resumen?dias=${dias}` 
-        : `/api/stats/dashboard-filtered?dias=${dias}&skuNombre=${encodeURIComponent(skuSeleccionado)}`;
-    fetch(url)
-        .then(response => {
-            console.log('Estado de la respuesta:', response.status);
-            if (!response.ok) {
-                return response.text().then(text => {
-                    throw new Error(`Error ${response.status}: ${text}`);
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Datos recibidos');
-            actualizarContadorTotal(data.totalModems || 
-                (data.distribucionSKU && data.distribucionSKU.length 
-                    ? data.distribucionSKU.reduce((sum, item) => sum + item.cantidad, 0) 
-                    : 0));
-            allData = data;
-            actualizarSelectorSku(data);
-            crearGraficaSKU(data.distribucionSKU || []);
-            crearGraficaRegistrosDiarios(data.modemsRegistradosPorDia || []);
-            crearGraficaEstadoFase(data.estadoPorFase || []);
-            actualizarDetallesSku();
-        })
-        .catch(error => {
-            console.error('Error al cargar datos:', error);
-            mostrarError(error.message);
-        });
+function setupControls() {
+  // Botón Regresar
+  const btnRegresar = document.getElementById('REGRESAR');
+  if (btnRegresar) {
+    btnRegresar.addEventListener('click', () => window.location.href = '/adminventario');
+  }
+  
+  // Botón Actualizar
+  const btnActualizar = document.getElementById('actualizarDatos');
+  if (btnActualizar) {
+    btnActualizar.addEventListener('click', () => {
+      const dias = document.getElementById('rangoDias')?.value || 30;
+      loadData(dias);
+    });
+  }
+  
+  // Selector de días
+  const selectDias = document.getElementById('rangoDias');
+  if (selectDias) {
+    selectDias.addEventListener('change', (e) => loadData(e.target.value));
+  }
+  
+  // Selector de SKU
+  const skuSelector = document.getElementById('skuSelector');
+  if (skuSelector) {
+    skuSelector.addEventListener('change', (e) => {
+      const dias = document.getElementById('rangoDias')?.value || 30;
+      loadData(dias, e.target.value);
+    });
+  }
 }
 
-// Función para actualizar el selector de SKU
-function actualizarSelectorSku(data) {
-    const skuSelector = document.getElementById('skuSelector');
-    if (!skuSelector) return;
-    
-    // Guardar SKU actual
-    const currentSku = selectedSku;
-    
-    // Si estamos filtrando por un SKU específico, necesitamos obtener la lista completa de SKUs
-    if (currentSku !== 'todos' || (data.distribucionSKU && data.distribucionSKU.length <= 1)) {
-        // Hacer una petición separada para obtener todos los SKUs disponibles
-        fetch('/api/stats/resumen')
-            .then(res => {
-                if (!res.ok) throw new Error('Error al cargar los SKUs');
-                return res.json();
-            })
-            .then(fullData => {
-                // Limpiar opciones actuales excepto la primera (Todos)
-                while (skuSelector.options.length > 1) {
-                    skuSelector.remove(1);
-                }
-                
-                // Agregar todas las opciones de SKU
-                if (fullData.distribucionSKU && fullData.distribucionSKU.length) {
-                    fullData.distribucionSKU.forEach(item => {
-                        const option = document.createElement('option');
-                        option.value = item.nombre;
-                        option.textContent = `${item.nombre} (${item.cantidad})`;
-                        skuSelector.appendChild(option);
-                    });
-                    
-                    // Restaurar selección
-                    if (currentSku !== 'todos') {
-                        for (let i = 0; i < skuSelector.options.length; i++) {
-                            if (skuSelector.options[i].value === currentSku) {
-                                skuSelector.selectedIndex = i;
-                                break;
-                            }
-                        }
-                    }
-                }
-            })
-            .catch(err => {
-                console.error('Error al cargar todos los SKUs:', err);
-            });
-    } else {
-        // Si estamos viendo todos los SKUs, simplemente actualizamos las opciones con los datos actuales
-        while (skuSelector.options.length > 1) {
-            skuSelector.remove(1);
-        }
-        
-        // Agregar nuevas opciones si hay datos
-        if (data.distribucionSKU && data.distribucionSKU.length) {
-            data.distribucionSKU.forEach(item => {
-                const option = document.createElement('option');
-                option.value = item.nombre;
-                option.textContent = `${item.nombre} (${item.cantidad})`;
-                skuSelector.appendChild(option);
-            });
-            
-            // Restaurar selección si es posible
-            if (currentSku !== 'todos') {
-                const existe = Array.from(skuSelector.options).some(opt => opt.value === currentSku);
-                if (existe) {
-                    skuSelector.value = currentSku;
-                    selectedSku = currentSku;
-                } else {
-                    skuSelector.value = 'todos';
-                    selectedSku = 'todos';
-                }
-            }
-        }
-    }
+function loadData(dias, skuNombre = 'todos') {
+  console.log(`Cargando datos para ${dias} días, SKU: ${skuNombre}`);
+  
+  // Mostrar estado de carga
+  setLoadingState();
+  
+  // Destruir gráficas existentes
+  destroyAllCharts();
+  
+  // Cargar SKUs para el selector
+  loadSKUs();
+  
+  // Cargar datos principales
+  const url = `/api/stats/dashboard-filtered?dias=${dias}${skuNombre !== 'todos' ? `&skuNombre=${skuNombre}` : ''}`;
+  
+  fetch(url)
+    .then(response => {
+      if (!response.ok) throw new Error(`Error ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      // Actualizar contador
+      document.getElementById('total-modems-count').textContent = data.totalModems || 0;
+      
+      // Renderizar gráficas
+      renderSkuChart(data.distribucionSKU);
+      renderDailyChart(data.modemsRegistradosPorDia);
+      renderPhaseChart(data.estadoPorFase);
+      
+      // Cargar datos de etapas
+      loadStagesData(skuNombre);
+    })
+    .catch(error => {
+      console.error('Error al cargar datos:', error);
+      showError(error.message);
+    });
 }
 
-// Función para crear gráfica de SKU
-function crearGraficaSKU(datos) {
-    console.log('Creando gráfica de SKU');
+function loadSKUs() {
+  fetch('/api/stats/dashboard-filtered')
+    .then(response => {
+      if (!response.ok) throw new Error(`Error ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      const selector = document.getElementById('skuSelector');
+      if (!selector) return;
+      
+      // Mantener solo la primera opción
+      while (selector.options.length > 1) {
+        selector.remove(1);
+      }
+      
+      // Añadir opciones
+      data.distribucionSKU.forEach(sku => {
+        const option = document.createElement('option');
+        option.value = sku.nombre;
+        option.textContent = sku.nombre;
+        selector.appendChild(option);
+      });
+    })
+    .catch(error => {
+      console.error('Error al cargar SKUs:', error);
+    });
+}
+
+function loadStagesData(skuNombre) {
+  const url = `/api/stats/etapas-proceso${skuNombre !== 'todos' ? `?skuNombre=${skuNombre}` : ''}`;
+  
+  fetch(url)
+    .then(response => {
+      if (!response.ok) throw new Error(`Error ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      renderStagesChart(data);
+    })
+    .catch(error => {
+      console.error('Error al cargar datos de etapas:', error);
+      showStagesError(error.message);
+    });
+}
+
+// --- Funciones auxiliares ---
+
+function setLoadingState() {
+  // Actualizar contador
+  const counter = document.getElementById('total-modems-count');
+  if (counter) counter.textContent = 'Cargando...';
+  
+  // Mostrar indicadores de carga en cada contenedor
+  document.querySelectorAll('.chart-container').forEach(container => {
+    // Eliminar canvas existente si lo hay
+    const existingCanvas = container.querySelector('canvas');
+    const canvasId = existingCanvas?.id || '';
     
-    // Si no hay datos, mostrar mensaje
-    if (!datos || datos.length === 0) {
-        const contenedor = document.getElementById('chartSKU');
-        if (contenedor) {
-            contenedor.innerHTML = '<div class="no-data">No hay datos disponibles</div>';
-        }
-        return;
+    // Limpiar el contenedor
+    container.innerHTML = '';
+    
+    // Recrear el canvas
+    if (canvasId) {
+      const canvas = document.createElement('canvas');
+      canvas.id = canvasId;
+      container.appendChild(canvas);
     }
     
-    // Buscar el contenedor y limpiar
-    const contenedor = document.getElementById('chartSKU');
-    if (!contenedor) return;
-    
-    contenedor.innerHTML = '';
-    
-    // Crear canvas para la gráfica
+    // Añadir indicador de carga
+    const loading = document.createElement('div');
+    loading.className = 'loading-indicator';
+    loading.innerHTML = '<i class="fas fa-spinner fa-spin"></i><p>Cargando datos...</p>';
+    container.appendChild(loading);
+  });
+}
+
+function destroyAllCharts() {
+  // Destruir todas las instancias de gráficas
+  Object.values(charts).forEach(chart => {
+    if (chart) {
+      try {
+        chart.destroy();
+      } catch (e) {
+        console.error('Error al destruir gráfica:', e);
+      }
+    }
+  });
+  
+  // Reiniciar el objeto de charts
+  charts = {};
+}
+
+function showError(message) {
+  // Mostrar error en el contador
+  const counter = document.getElementById('total-modems-count');
+  if (counter) counter.textContent = 'Error';
+  
+  // Mostrar error en todos los contenedores de gráficas
+  document.querySelectorAll('.chart-container').forEach(container => {
+    container.innerHTML = `
+      <div class="error-message">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>Error al cargar datos</p>
+        <small>${message}</small>
+      </div>
+    `;
+  });
+}
+
+function showStagesError(message) {
+  const container = document.querySelector('.chart-section:nth-child(3) .chart-container');
+  if (container) {
+    container.innerHTML = `
+      <div class="error-message">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>Error al cargar datos de etapas</p>
+        <small>${message}</small>
+      </div>
+    `;
+  }
+}
+
+// --- Funciones de renderizado de gráficas ---
+
+function renderSkuChart(data) {
+  const container = document.querySelector('.chart-section:nth-child(1) .chart-container');
+  if (!container) return;
+  
+  // Eliminar indicador de carga
+  container.querySelector('.loading-indicator')?.remove();
+  
+  // Recrear canvas si no existe
+  if (!container.querySelector('canvas')) {
     const canvas = document.createElement('canvas');
-    canvas.id = 'skuChart';
-    contenedor.appendChild(canvas);
-    
-    // Preparar datos para Chart.js
-    const labels = datos.map(item => item.nombre);
-    const values = datos.map(item => Number(item.cantidad));
-    const colors = generarColores(datos.length);
-    
-    // Destruir gráfica previa si existe
-    if (skuChart) skuChart.destroy();
-    
-    // Crear gráfica circular
-    skuChart = new Chart(canvas, {
-        type: 'pie',
-        data: {
-            labels: labels,
-            datasets: [{
-                data: values,
-                backgroundColor: colors,
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'right',
-                    labels: {
-                        font: {
-                            size: 12
-                        }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.raw;
-                            const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                            const percentage = Math.round((value / total) * 100);
-                            return `${label}: ${value} (${percentage}%)`;
-                        }
-                    }
-                }
-            }
-        }
-    });
+    canvas.id = 'chartSKU';
+    container.appendChild(canvas);
+  }
+  
+  const canvas = container.querySelector('canvas');
+  const ctx = canvas.getContext('2d');
+  
+  // Datos para la gráfica
+  const labels = data.map(item => item.nombre);
+  const values = data.map(item => item.cantidad);
+  const colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', 
+                 '#5a5c69', '#858796', '#6610f2', '#6f42c1', '#fd7e14'];
+  
+  // Crear gráfica
+  charts.sku = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right' }
+      }
+    }
+  });
 }
 
-// Función para crear gráfica de registros diarios
-function crearGraficaRegistrosDiarios(datos) {
-    console.log('Creando gráfica de registros diarios');
-    
-    // Si no hay datos, mostrar mensaje
-    if (!datos || datos.length === 0) {
-        const contenedor = document.getElementById('chartDiario');
-        if (contenedor) {
-            contenedor.innerHTML = '<div class="no-data">No hay datos disponibles</div>';
-        }
-        return;
-    }
-    
-    // Buscar el contenedor y limpiar
-    const contenedor = document.getElementById('chartDiario');
-    if (!contenedor) return;
-    
-    contenedor.innerHTML = '';
-    
-    // Crear canvas para la gráfica
+function renderDailyChart(data) {
+  const container = document.querySelector('.chart-section:nth-child(2) .chart-container');
+  if (!container) return;
+  
+  // Eliminar indicador de carga
+  container.querySelector('.loading-indicator')?.remove();
+  
+  // Recrear canvas si no existe
+  if (!container.querySelector('canvas')) {
     const canvas = document.createElement('canvas');
-    canvas.id = 'registrosDiariosChart';
-    contenedor.appendChild(canvas);
-    
-    // Ordenar datos por fecha
-    datos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-    
-    // Preparar datos para Chart.js
-    const labels = datos.map(item => formatearFecha(item.fecha));
-    const values = datos.map(item => Number(item.cantidad));
-    
-    // Destruir gráfica previa si existe
-    if (registrosDiariosChart) registrosDiariosChart.destroy();
-    
-    // Crear gráfica de línea
-    registrosDiariosChart = new Chart(canvas, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Modems registrados',
-                data: values,
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 2,
-                tension: 0.1,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
+    canvas.id = 'chartDiario';
+    container.appendChild(canvas);
+  }
+  
+  const canvas = container.querySelector('canvas');
+  const ctx = canvas.getContext('2d');
+  
+  // Datos para la gráfica
+  const labels = data.map(item => new Date(item.fecha).toLocaleDateString());
+  const values = data.map(item => item.cantidad);
+  
+  // Crear gráfica
+  charts.diario = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Modems registrados',
+        data: values,
+        fill: true,
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgb(75, 192, 192)',
+        tension: 0.1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
 }
 
-// Función para crear gráfica de estado por fase
-function crearGraficaEstadoFase(datos) {
-    console.log('Creando gráfica de estado por fase');
-    
-    // Si no hay datos, mostrar mensaje
-    if (!datos || datos.length === 0) {
-        const contenedor = document.getElementById('chartFase');
-        if (contenedor) {
-            contenedor.innerHTML = '<div class="no-data">No hay datos disponibles</div>';
-        }
-        return;
-    }
-    
-    // Buscar el contenedor y limpiar
-    const contenedor = document.getElementById('chartFase');
-    if (!contenedor) return;
-    
-    contenedor.innerHTML = '';
-    
-    // Crear canvas para la gráfica
+function renderStagesChart(data) {
+  const container = document.querySelector('.chart-section:nth-child(3) .chart-container');
+  if (!container) return;
+  
+  // Eliminar indicador de carga
+  container.querySelector('.loading-indicator')?.remove();
+  
+  // Recrear canvas si no existe
+  if (!container.querySelector('canvas')) {
     const canvas = document.createElement('canvas');
-    canvas.id = 'estadoFaseChart';
-    contenedor.appendChild(canvas);
-    
-    // Obtener fases y estados únicos
-    const fases = [...new Set(datos.map(item => item.faseActual))];
-    const estados = [...new Set(datos.map(item => item.estado))];
-    
-    // Preparar datos agrupados
-    const dataPorFase = {};
-    fases.forEach(fase => {
-        dataPorFase[fase] = {};
-        estados.forEach(estado => {
-            dataPorFase[fase][estado] = 0;
-        });
-    });
-    
-    // Llenar datos
-    datos.forEach(item => {
-        if (item.faseActual && item.estado) {
-            dataPorFase[item.faseActual][item.estado] = Number(item.cantidad);
-        }
-    });
-    
-    // Colores para cada estado
-    const colores = {
-        'REGISTRO': 'rgba(255, 99, 132, 0.7)',
-        'TEST_INICIAL': 'rgba(54, 162, 235, 0.7)',
-        'COSMETICA': 'rgba(255, 206, 86, 0.7)',
-        'LIBERACION_LIMPIEZA': 'rgba(75, 192, 192, 0.7)',
-        'RETEST': 'rgba(153, 102, 255, 0.7)',
-        'EMPAQUE': 'rgba(255, 159, 64, 0.7)'
-    };
-    
-    // Crear datasets
-    const datasets = estados.map(estado => {
-        return {
-            label: estado,
-            data: fases.map(fase => dataPorFase[fase][estado] || 0),
-            backgroundColor: colores[estado] || `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.7)`
-        };
-    });
-    
-    // Destruir gráfica previa si existe
-    if (estadoFaseChart) estadoFaseChart.destroy();
-    
-    // Crear gráfica de barras
-    estadoFaseChart = new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels: fases,
-            datasets: datasets
+    canvas.id = 'chartEtapas';
+    container.appendChild(canvas);
+  }
+  
+  const canvas = container.querySelector('canvas');
+  const ctx = canvas.getContext('2d');
+  
+  // Obtener el total de modems del contador principal
+  const totalModems = parseInt(document.getElementById('total-modems-count')?.textContent) || 0;
+  
+  // Datos para la gráfica - AÑADIMOS SCRAP
+  const etiquetas = ['Registro', 'En Proceso', 'Entrega', 'Final', 'Scrap'];
+  const valores = [
+    data.registro || 0,
+    data.enProceso || 0,
+    data.entrega || 0,
+    data.final || 0,
+    data.scrap || 0  // Añadimos el valor de Scrap
+  ];
+  
+  // Añadir color para Scrap (rojo oscuro)
+  const colores = ['#4e73df', '#f6c23e', '#1cc88a', '#36b9cc', '#dc3545'];
+  
+  // Crear dataset para línea de referencia
+  const referenceLine = {
+    label: 'Total General',
+    data: etiquetas.map(() => totalModems),
+    type: 'line',
+    borderColor: 'rgba(255, 0, 0, 0.7)',
+    borderWidth: 2,
+    borderDash: [5, 5],
+    pointRadius: 0,
+    fill: false
+  };
+  
+  // Crear gráfica
+  charts.etapas = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: etiquetas,
+      datasets: [
+        {
+          label: 'Cantidad de modems',
+          data: valores,
+          backgroundColor: colores,
+          borderColor: colores,
+          borderWidth: 1
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    stacked: true
-                },
-                x: {
-                    stacked: true
-                }
+        referenceLine  // Añadir línea de referencia
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { 
+          position: 'top',
+          labels: {
+            generateLabels: function(chart) {
+              const labels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+              if (labels[1]) {
+                labels[1].text = `Total General (${totalModems})`;
+              }
+              return labels;
             }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            footer: function() {
+              return `Total de modems: ${totalModems}`;
+            }
+          }
         }
-    });
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'Cantidad' },
+          suggestedMax: Math.max(...valores, totalModems) * 1.1 // 10% extra
+        },
+        x: {
+          title: { display: true, text: 'Etapa' }
+        }
+      }
+    }
+  });
 }
 
-// Función para actualizar la gráfica de detalles del SKU seleccionado
-function actualizarDetallesSku() {
-    console.log('Actualizando detalles del SKU:', selectedSku);
-    
-    // Actualizar el nombre del SKU seleccionado
-    const skuNameElement = document.getElementById('selectedSkuName');
-    if (skuNameElement) {
-        skuNameElement.textContent = selectedSku === 'todos' ? 'Todos' : selectedSku;
-    }
-    
-    // Mostrar indicador de carga
-    const detailContainer = document.getElementById('chartSkuDetail');
-    if (!detailContainer) return;
-    
-    detailContainer.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</div>';
-    
-    // Si es "todos", mostrar distribución general por fases
-    if (selectedSku === 'todos') {
-        mostrarDistribucionGeneral();
-    } else {
-        // Si es un SKU específico, cargar sus detalles
-        cargarDetallesPorSku();
-    }
-}
+function renderPhaseChart(data) {
+  const container = document.querySelector('.chart-section:nth-child(4) .chart-container');
+  if (!container) return;
 
-// Función para mostrar distribución general por fases cuando no hay SKU específico seleccionado
-function mostrarDistribucionGeneral() {
-    if (!allData || !allData.estadoPorFase || allData.estadoPorFase.length === 0) {
-        const detailContainer = document.getElementById('chartSkuDetail');
-        if (detailContainer) {
-            detailContainer.innerHTML = '<div class="no-data">No hay datos disponibles</div>';
-        }
-        return;
-    }
-    
-    // Agrupar por fases para el total
-    const fases = [...new Set(allData.estadoPorFase.map(item => item.faseActual))];
-    const datosPorFase = {};
-    
-    fases.forEach(fase => {
-        datosPorFase[fase] = allData.estadoPorFase
-            .filter(item => item.faseActual === fase)
-            .reduce((sum, item) => sum + Number(item.cantidad), 0);
-    });
-    
-    // Crear gráfica circular de distribución por fases
-    const detailContainer = document.getElementById('chartSkuDetail');
-    if (!detailContainer) return;
-    
-    detailContainer.innerHTML = '';
+  container.querySelector('.loading-indicator')?.remove();
+
+  if (!container.querySelector('canvas')) {
     const canvas = document.createElement('canvas');
-    canvas.id = 'skuDetailChart';
-    detailContainer.appendChild(canvas);
-    
-    // Preparar datos para Chart.js
-    const labels = Object.keys(datosPorFase);
-    const values = Object.values(datosPorFase);
-    const colors = generarColores(labels.length);
-    
-    // Destruir gráfica previa si existe
-    if (skuDetailChart) skuDetailChart.destroy();
-    
-    // Crear nueva gráfica circular
-    skuDetailChart = new Chart(canvas, {
-        type: 'pie',
-        data: {
-            labels: labels,
-            datasets: [{
-                data: values,
-                backgroundColor: colors,
-                borderWidth: 1
-            }]
+    canvas.id = 'chartFase';
+    container.appendChild(canvas);
+  }
+
+  const canvas = container.querySelector('canvas');
+  const ctx = canvas.getContext('2d');
+
+  // Obtener el total de modems del contador principal
+  const totalModems = parseInt(document.getElementById('total-modems-count')?.textContent) || 0;
+
+  // Definir el orden específico de las fases - AÑADIMOS SCRAP
+  const ordenFases = [
+    'REGISTRO', 
+    'TEST_INICIAL', 
+    'COSMETICA', 
+    'LIBERACION_LIMPIEZA', 
+    'RETEST', 
+    'EMPAQUE',
+    'SCRAP'  // Añadimos SCRAP al final
+  ];
+  
+  // Mapeo de nombres legibles para las fases - AÑADIMOS SCRAP
+  const nombresFases = {
+    'REGISTRO': 'Registro',
+    'TEST_INICIAL': 'Test Inicial',
+    'COSMETICA': 'Cosmética',
+    'LIBERACION_LIMPIEZA': 'Liberación Limpieza',
+    'RETEST': 'Retest',
+    'EMPAQUE': 'Empaque',
+    'SCRAP': 'Scrap'  // Añadimos el nombre legible para SCRAP
+  };
+  
+  // Agrupar los datos por fase (acumulando los valores para cada fase)
+  const datosPorFase = {};
+  ordenFases.forEach(fase => {
+    datosPorFase[fase] = 0;
+  });
+  
+  data.forEach(item => {
+    // Si la fase existe en nuestro orden predefinido, acumular su cantidad
+    if (ordenFases.includes(item.faseActual)) {
+      datosPorFase[item.faseActual] += item.cantidad;
+    }
+  });
+  
+  // Preparar etiquetas y datos para la gráfica
+  const faseLabels = ordenFases.map(fase => nombresFases[fase] || formatFaseName(fase));
+  const valores = ordenFases.map(fase => datosPorFase[fase] || 0);
+  
+  // Colores para cada fase - AÑADIMOS COLOR PARA SCRAP
+  const colores = [
+    '#4e73df', // Registro (azul)
+    '#36b9cc', // Test Inicial (cyan)
+    '#1cc88a', // Cosmetica (verde)
+    '#f6c23e', // Liberacion Limpieza (amarillo)
+    '#e74a3b', // Retest (rojo)
+    '#5a5c69', // Empaque (gris)
+    '#dc3545'  // Scrap (rojo oscuro)
+  ];
+
+  // Dataset principal para las barras
+  const barDataset = {
+    label: 'Cantidad por fase',
+    data: valores,
+    backgroundColor: colores,
+    borderColor: colores.map(color => color),
+    borderWidth: 1,
+    barPercentage: 0.7, // Ajuste del ancho de las barras
+    categoryPercentage: 0.9
+  };
+
+  // Línea de referencia del total
+  const referenceLine = {
+    label: 'Total General',
+    data: faseLabels.map(() => totalModems),
+    type: 'line',
+    borderColor: 'rgba(255, 0, 0, 0.7)',
+    borderWidth: 2,
+    borderDash: [5, 5],
+    pointRadius: 0,
+    fill: false,
+    order: 0
+  };
+
+  // Crear gráfica
+  charts.fase = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: faseLabels,
+      datasets: [barDataset, referenceLine]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { 
+            display: true, 
+            text: 'Cantidad de modems',
+            font: { weight: 'bold' }
+          },
+          suggestedMax: Math.max(totalModems, ...valores) * 1.1
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Distribución por Fase de Proceso'
-                },
-                legend: {
-                    position: 'right',
-                    labels: {
-                        font: {
-                            size: 12
-                        }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.raw;
-                            const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                            const percentage = Math.round((value / total) * 100);
-                            return `${label}: ${value} (${percentage}%)`;
-                        }
-                    }
-                }
-            }
+        x: {
+          title: { 
+            display: true, 
+            text: 'Fase',
+            font: { weight: 'bold' }
+          },
+          ticks: {
+            font: { size: 12 }
+          },
+          grid: { display: false }
         }
-    });
-}
-
-// Función para cargar y mostrar detalles específicos de un SKU
-function cargarDetallesPorSku() {
-    console.log('Cargando detalles para SKU:', selectedSku);
-    
-    // Hacer solicitud a API para datos específicos del SKU
-    fetch(`/api/stats/sku-detalle?sku=${encodeURIComponent(selectedSku)}`)
-        .then(response => {
-            if (!response.ok) {
-                return response.text().then(text => {
-                    throw new Error(`Error ${response.status}: ${text}`);
-                });
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            boxWidth: 15,
+            padding: 10,
+            generateLabels: function(chart) {
+              const labels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+              if (labels.length > 1) {
+                labels[1].text = `Total General (${totalModems})`;
+              }
+              return labels;
             }
-            return response.json();
-        })
-        .then(data => {
-            if (!data || data.length === 0) {
-                throw new Error('No hay datos disponibles para este SKU');
+          }
+        },
+        tooltip: {
+          callbacks: {
+            footer: function() {
+              return `Total de modems: ${totalModems}`;
             }
-            
-            // Crear gráfica con los datos específicos
-            const detailContainer = document.getElementById('chartSkuDetail');
-            if (!detailContainer) return;
-            
-            detailContainer.innerHTML = '';
-            const canvas = document.createElement('canvas');
-            canvas.id = 'skuDetailChart';
-            detailContainer.appendChild(canvas);
-            
-            // Preparar datos para Chart.js
-            const labels = data.map(item => item.categoria);
-            const values = data.map(item => Number(item.cantidad));
-            const colors = generarColores(data.length);
-            
-            // Destruir gráfica previa si existe
-            if (skuDetailChart) skuDetailChart.destroy();
-            
-            // Crear nueva gráfica circular
-            skuDetailChart = new Chart(canvas, {
-                type: 'pie',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: colors,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: `Detalles de ${selectedSku}`
-                        },
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                font: {
-                                    size: 12
-                                }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.raw;
-                                    const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                    const percentage = Math.round((value / total) * 100);
-                                    return `${label}: ${value} (${percentage}%)`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        })
-        .catch(error => {
-            console.error('Error al cargar detalles del SKU:', error);
-            
-            // Mostrar mensaje de error en la gráfica
-            const detailContainer = document.getElementById('chartSkuDetail');
-            if (detailContainer) {
-                detailContainer.innerHTML = `<div class="error-message">
-                    <i class="fas fa-exclamation-circle"></i> 
-                    Error al cargar datos del SKU: ${error.message}
-                </div>`;
-            }
-        });
+          }
+        }
+      }
+    }
+  });
 }
 
-// Funciones auxiliares
-function mostrarCargando() {
-    document.querySelectorAll('.chart-container').forEach(container => {
-        container.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Cargando datos...</div>';
-    });
+// Función auxiliar para formatear nombres de fases
+function formatFaseName(fase) {
+  if (typeof fase === 'string' && fase.includes('_')) {
+    return fase.toLowerCase()
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+  return `Fase ${fase}`;
 }
 
-function mostrarError(mensaje) {
-    document.querySelectorAll('.chart-container').forEach(container => {
-        container.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle"></i> Error: ${mensaje}</div>`;
-    });
-}
-
-function formatearFecha(fecha) {
-    if (!fecha) return '';
-    const date = typeof fecha === 'string' ? new Date(fecha) : fecha;
-    return date.toLocaleDateString('es-ES', { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric' 
-    });
-}
-
-function generarColores(cantidad) {
-    const colores = [
-        'rgba(255, 99, 132, 0.7)',
-        'rgba(54, 162, 235, 0.7)',
-        'rgba(255, 206, 86, 0.7)',
-        'rgba(75, 192, 192, 0.7)',
-        'rgba(153, 102, 255, 0.7)',
-        'rgba(255, 159, 64, 0.7)',
-        'rgba(201, 203, 207, 0.7)',
-        'rgba(255, 145, 0, 0.7)',
-        'rgba(0, 200, 83, 0.7)',
-        'rgba(139, 0, 139, 0.7)'
-    ];
-    
-    return Array(cantidad).fill().map((_, i) => colores[i % colores.length]);
+function simplifyStateName(name) {
+  if (typeof name !== 'string') return name;
+  if (name.length > 15) {
+    return name.split(' ').slice(0, 2).join(' ') + '...';
+  }
+  return name;
 }

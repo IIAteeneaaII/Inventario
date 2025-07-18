@@ -384,4 +384,88 @@ router.get('/stats/dashboard-filtered', verificarAuth, async (req, res) => {
   }
 });
 
+// Endpoint para datos de etapas del proceso - VERSIÓN CORREGIDA
+router.get('/stats/etapas-proceso', verificarAuth, async (req, res) => {
+  try {
+    const { skuNombre } = req.query;
+    console.log('Solicitud recibida para etapas-proceso, SKU:', skuNombre);
+    
+    // Primero, consultar todas las fases disponibles con su conteo
+    let whereClause = 'm."deletedAt" IS NULL';
+    let params = [];
+    
+    if (skuNombre && skuNombre !== 'todos') {
+      whereClause += ' AND c.nombre = $1';
+      params.push(skuNombre);
+    }
+    
+    // Usamos CAST para convertir el enum a text y evitar problemas de tipo
+    const query = `
+      SELECT 
+        CAST(m."faseActual" AS TEXT) AS fase_nombre,
+        COUNT(*) AS cantidad
+      FROM "Modem" m
+      JOIN "CatalogoSKU" c ON m."skuId" = c.id
+      WHERE ${whereClause}
+      GROUP BY m."faseActual"
+      ORDER BY m."faseActual"
+    `;
+    
+    console.log('Ejecutando consulta para obtener fases');
+    const fasesData = await prisma.$queryRawUnsafe(query, ...params);
+    console.log('Datos de fases obtenidos:', fasesData);
+    
+    // Inicializar categorías con ceros
+    const etapas = {
+      registro: 0,
+      enProceso: 0,
+      entrega: 0,
+      final: 0
+    };
+    
+    // Si no hay datos, devolver los valores inicializados
+    if (!fasesData || fasesData.length === 0) {
+      return res.json(etapas);
+    }
+    
+    // Asignar datos a las categorías según su posición
+    const totalFases = fasesData.length;
+    
+    if (totalFases >= 1) {
+      // Primera fase es registro
+      etapas.registro = Number(fasesData[0].cantidad);
+      
+      if (totalFases >= 2) {
+        // Última fase es final
+        etapas.final = Number(fasesData[totalFases - 1].cantidad);
+        
+        if (totalFases >= 3) {
+          // Penúltima fase es entrega
+          etapas.entrega = Number(fasesData[totalFases - 2].cantidad);
+          
+          // Fases intermedias son en proceso (si hay más de 3 fases)
+          if (totalFases > 3) {
+            // Sumar todas las fases intermedias
+            for (let i = 1; i < totalFases - 2; i++) {
+              etapas.enProceso += Number(fasesData[i].cantidad);
+            }
+          }
+        }
+      }
+    }
+    
+    console.log('Datos de etapas calculados:', etapas);
+    res.json(etapas);
+  } catch (error) {
+    console.error('Error al obtener datos de etapas del proceso:', error);
+    
+    // En caso de error, devolver un error claro sin datos de ejemplo
+    res.status(500).json({ 
+      error: true,
+      message: 'Error al calcular datos de etapas del proceso',
+      details: error.message
+    });
+  }
+});
+
 module.exports = router;

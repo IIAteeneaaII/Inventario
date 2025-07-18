@@ -7,6 +7,36 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <link rel="stylesheet" href="/css/charts.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Estilos adicionales para errores */
+    .error-banner {
+      background-color: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeeba;
+      border-radius: 5px;
+      padding: 8px 15px;
+      margin-top: 15px;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .loading-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      color: #666;
+    }
+    
+    .loading-indicator i {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: #1a9ad7;
+    }
+  </style>
 </head>
 <body>
   <div class="dashboard-container">
@@ -43,7 +73,7 @@
       <!-- Contador total -->
       <div class="total-counter">
         <div class="counter-label">Total de modems registrados</div>
-        <div class="counter-value" id="total-modems-count">8542</div>
+        <div class="counter-value" id="total-modems-count">Cargando...</div>
       </div>
       
       <!-- Gráficas -->
@@ -53,7 +83,9 @@
           <div class="chart-header">
             <i class="fas fa-chart-pie"></i> Distribución por SKU
           </div>
-          <div class="chart-container" id="chartSKU"></div>
+          <div class="chart-container">
+            <canvas id="chartSKU" width="400" height="300"></canvas>
+          </div>
         </div>
         
         <!-- Gráfica de modems registrados por día -->
@@ -61,7 +93,19 @@
           <div class="chart-header">
             <i class="fas fa-chart-line"></i> Modems registrados por día
           </div>
-          <div class="chart-container" id="chartDiario"></div>
+          <div class="chart-container">
+            <canvas id="chartDiario" width="400" height="300"></canvas>
+          </div>
+        </div>
+        
+        <!-- NUEVA GRÁFICA: Etapas del Proceso -->
+        <div class="chart-section">
+          <div class="chart-header">
+            <i class="fas fa-tasks"></i> Etapas del Proceso
+          </div>
+          <div class="chart-container">
+            <canvas id="chartEtapas" width="400" height="300"></canvas>
+          </div>
         </div>
         
         <!-- Gráfica de estado por fase -->
@@ -69,37 +113,33 @@
           <div class="chart-header">
             <i class="fas fa-th"></i> Estado por Fase de Proceso
           </div>
-          <div class="chart-container" id="chartFase"></div>
+          <div class="chart-container">
+            <canvas id="chartFase" width="400" height="300"></canvas>
+          </div>
         </div>
       </div>
     </main>
   </div>
 
-  <!-- Depuración console.log -->
   <script>
-    // Interceptar console.log para depurar errores
-    (function(){
-      const oldLog = console.log;
-      console.log = function() {
-        oldLog.apply(console, arguments);
-        // Si hay un error específico, podemos mostrarlo en la interfaz
-        const args = Array.from(arguments);
-        if (args.some(arg => typeof arg === 'string' && arg.includes('error'))) {
-          const errorDiv = document.createElement('div');
-          errorDiv.style.position = 'fixed';
-          errorDiv.style.bottom = '10px';
-          errorDiv.style.right = '10px';
-          errorDiv.style.backgroundColor = 'rgba(255,0,0,0.7)';
-          errorDiv.style.color = 'white';
-          errorDiv.style.padding = '10px';
-          errorDiv.style.zIndex = '9999';
-          errorDiv.textContent = args.join(' ');
-          document.body.appendChild(errorDiv);
-          setTimeout(() => errorDiv.remove(), 5000);
+    // Script inicial para mostrar indicadores de carga
+    document.addEventListener('DOMContentLoaded', function() {
+      // Mostrar indicadores de carga en cada contenedor de gráfica
+      document.querySelectorAll('.chart-container').forEach(container => {
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'loading-indicator';
+        loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i><p>Preparando gráfica...</p>';
+        
+        // Agregar después del canvas
+        const canvas = container.querySelector('canvas');
+        if (canvas) {
+          canvas.after(loadingDiv);
         }
-      };
-    })();
+      });
+    });
   </script>
+  
+  <!-- Script para las gráficas -->
   <script src="/js/dashboard-charts.js"></script>
 </body>
 </html>
