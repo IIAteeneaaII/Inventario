@@ -5,6 +5,7 @@ const { authMiddleware } = require('../middlewares/authMiddleware');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const adminController = require('../controllers/adminController');
+const { vistaEditarUsuario } = require('../controllers/adminController');
 
 router.get('/vista/:skuCode', verificarAuth, async (req, res) => {
   const skuCode = req.params.skuCode;
@@ -44,6 +45,15 @@ router.get('/vista/:skuCode', verificarAuth, async (req, res) => {
 router.get('/registro_prueba', (req, res) => {
   res.render('dasboard_registro');
 });
+
+// Dashboard para editar usuarios
+
+router.get('/editarusuario/:id',
+  verificarAuth,
+  verificarRol(['UAI', 'UA']), // ✅ llamado correctamente
+  vistaEditarUsuario
+);
+
 
 // Rutas protegidas (para redirigir a los roles)
 // Dashboard para rol Admin inventario
