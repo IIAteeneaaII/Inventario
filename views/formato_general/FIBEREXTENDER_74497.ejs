@@ -203,6 +203,47 @@
             }
         });
     });
+
+// ============= SISTEMA DE AUTO-FOCUS PARA ESCÁNER =============
+const defaultInput = snInput;
+let userChangedFocus = false;
+
+// Función para devolver el foco al campo predeterminado
+function resetFocusToDefault() {
+    setTimeout(() => {
+        defaultInput.focus();
+    }, 100);
+}
+
+// Actualizar la función procesarFormulario para mantener el foco
+const originalProcesarFormulario = procesarFormulario;
+procesarFormulario = function() {
+    const result = originalProcesarFormulario();
+    resetFocusToDefault();
+    return result;
+};
+
+// Detectar cuando el usuario hace clic en otro campo de entrada
+document.querySelectorAll('input, select').forEach(element => {
+    if (element.id !== 'sn-input') {
+        element.addEventListener('mousedown', function() {
+            userChangedFocus = true;
+            setTimeout(() => {
+                userChangedFocus = false;
+            }, 10000); // 10 segundos para usar el campo manualmente
+        });
+    }
+});
+
+// Evento de clic global para devolver el foco al campo S/N
+document.addEventListener('click', function(e) {
+    if (!userChangedFocus && 
+        !e.target.matches('input, select, button, label, option') &&
+        window.getSelection().toString() === '') {
+        defaultInput.focus();
+    }
+});
+// ================================================================
     
     // Cargar registros al iniciar
     renderizarRegistros();

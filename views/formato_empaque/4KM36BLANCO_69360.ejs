@@ -115,6 +115,190 @@
   document.getElementById("volver-btn").addEventListener("click", function () {
     window.history.back();
   });
+// Implementación del sistema de procesamiento del formulario y auto-focus
+document.addEventListener('DOMContentLoaded', function() {
+  // Referencias a elementos del DOM
+  const snInput = document.getElementById('sn-input');
+  const reparacionesInput = document.getElementById('reparaciones-input');
+  const scrapInput = document.getElementById('scrap-input');
+  const motivoScrapSelect = document.getElementById('motivo-scrap');
+  const confirmarBtn = document.getElementById('confirmar-btn');
+  const registrosBody = document.getElementById('registros-body');
+  const cambioLoteBtn = document.getElementById('cambio-lote-btn');
+
+  // Sistema de auto-focus
+  const defaultInput = snInput;
+  let userChangedFocus = false;
+
+  function resetFocusToDefault() {
+    setTimeout(() => {
+      defaultInput.focus();
+    }, 100);
+  }
+
+  // Obtener usuario actual
+  const usuarioActual = localStorage.getItem('username') || 'UsuarioDemo';
+  
+  // Array para almacenar registros
+  let registros = JSON.parse(localStorage.getItem('registros')) || [];
+  
+  // Función para formatear fecha
+  function formatearFecha(fecha) {
+    const opciones = { 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    };
+    return fecha.toLocaleString('es-MX', opciones);
+  }
+  
+  // Función para renderizar los registros
+  function renderizarRegistros() {
+    registrosBody.innerHTML = '';
+    
+    if (registros.length === 0) {
+      registrosBody.innerHTML = `
+        <tr>
+          <td colspan="4" style="text-align: center;">No hay registros aún</td>
+        </tr>
+      `;
+      return;
+    }
+    
+    registros.forEach(registro => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${registro.usuario}</td>
+        <td>${registro.fecha}</td>
+        <td>${registro.valor}</td>
+        <td>
+          ${registro.tipo}
+          ${registro.motivo ? `<span class="motivo-tag motivo-${registro.motivo}">${registro.motivo}</span>` : ''}
+        </td>
+      `;
+      registrosBody.appendChild(tr);
+    });
+  }
+  
+  // Función para agregar un nuevo registro
+  function agregarRegistro(tipo, valor, motivo = null) {
+    const nuevoRegistro = {
+      usuario: usuarioActual,
+      fecha: formatearFecha(new Date()),
+      tipo: motivo ? motivo : tipo,
+      valor: valor,
+      motivo: motivo ? motivo.toLowerCase() : null
+    };
+    
+    registros.unshift(nuevoRegistro);
+    localStorage.setItem('registros', JSON.stringify(registros));
+    renderizarRegistros();
+  }
+  
+  // Función para procesar el formulario
+  function procesarFormulario() {
+    let registroAgregado = false;
+    
+    if (snInput.value.trim() !== '') {
+      agregarRegistro('S/N', snInput.value.trim());
+      snInput.value = '';
+      registroAgregado = true;
+    }
+    
+    if (reparacionesInput.value.trim() !== '') {
+      agregarRegistro('Reparación', reparacionesInput.value.trim());
+      reparacionesInput.value = '';
+      registroAgregado = true;
+    }
+    
+    if (scrapInput.value.trim() !== '') {
+      if (!motivoScrapSelect.value) {
+        Swal.fire({
+          title: 'Error',
+          text: 'Para registrar un Scrap es necesario seleccionar el motivo',
+          icon: 'error'
+        });
+        motivoScrapSelect.focus();
+        return;
+      }
+      
+      const motivoTexto = motivoScrapSelect.options[motivoScrapSelect.selectedIndex].text;
+      agregarRegistro('Scrap', scrapInput.value.trim(), motivoTexto);
+      scrapInput.value = '';
+      motivoScrapSelect.value = '';
+      registroAgregado = true;
+    }
+    
+    if (!registroAgregado) {
+      Swal.fire({
+        title: 'Advertencia',
+        text: 'Por favor ingrese al menos un valor en S/N, Reparaciones o Scrap',
+        icon: 'warning'
+      });
+    }
+    
+    // Devolver el foco al campo principal después de procesar
+    resetFocusToDefault();
+  }
+
+  // Funcionalidad de cambio de lote
+  if (cambioLoteBtn) {
+    cambioLoteBtn.addEventListener('click', () => {
+      Swal.fire({
+        title: 'Cambio de Lote',
+        text: '¿Deseas cambiar de lote?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cambiar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = '/cambio-lote';
+        }
+      });
+    });
+  }
+  
+  // Event Listeners
+  confirmarBtn.addEventListener('click', procesarFormulario);
+  
+  // Permitir enviar con Enter en cualquier campo
+  [snInput, reparacionesInput, scrapInput, motivoScrapSelect].forEach(element => {
+    element.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        procesarFormulario();
+      }
+    });
+  });
+  
+  // Detectar cuando el usuario hace clic en otro campo
+  document.querySelectorAll('input, select').forEach(element => {
+    if (element.id !== 'sn-input') {
+      element.addEventListener('mousedown', function() {
+        userChangedFocus = true;
+        setTimeout(() => {
+          userChangedFocus = false;
+        }, 10000); // 10 segundos para usar el campo manualmente
+      });
+    }
+  });
+  
+  // Evento de clic global para devolver el foco al campo S/N
+  document.addEventListener('click', function(e) {
+    if (!userChangedFocus && 
+        !e.target.matches('input, select, button, label, option') &&
+        window.getSelection().toString() === '') {
+      defaultInput.focus();
+    }
+  });
+  
+  // Inicialización
+  renderizarRegistros();
+  defaultInput.focus();
+});
 </script>
 </body>
 </html>
