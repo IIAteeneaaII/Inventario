@@ -207,8 +207,16 @@
                                 confirmButton: 'swal2-confirm'
                             }
                         }).then(() => {
-                            const ruta = `/vista/${loteSeleccionado.sku}`;
-                            window.location.href = ruta;
+                            // Enviar el SKU seleccionado al backend mediante POST
+                            fetch('/seleccionar-sku', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    sku: loteSeleccionado.sku
+                                })
+                            })
                         });
                     }
                 });

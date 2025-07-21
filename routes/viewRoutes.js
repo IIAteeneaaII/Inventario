@@ -10,7 +10,7 @@ router.get('/registro_prueba', (req, res) => {
   res.render('dasboard_registro');
 });
 
-router.get('/vista/:skuCode', verificarAuth, async (req, res) => {
+router.get('/seleccionar-sku', verificarAuth, async (req, res) => {
   try {
     const user = req.user;
     const skuId = parseInt(req.params.skuCode);
