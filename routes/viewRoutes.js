@@ -4,48 +4,58 @@ const { verificarAuth, verificarRol } = require('../controllers/authController')
 const { authMiddleware } = require('../middlewares/authMiddleware');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-<<<<<<< Updated upstream
-=======
+
+// Ruta pública para registro de usuario (debe estar antes de cualquier middleware de autenticación)
+router.get('/registro_prueba', (req, res) => {
+  res.render('dasboard_registro');
+});
 
 router.get('/vista/:skuCode', verificarAuth, async (req, res) => {
-  const skuCode = req.params.skuCode;
-  const user = req.user;
-
   try {
-    // Buscar el SKU en la tabla CatalogoSKU
+    const user = req.user;
+    const skuId = parseInt(req.params.skuCode);
+
     const sku = await prisma.catalogoSKU.findUnique({
-      where: { nombre: skuCode }
+      where: { id: skuId }
     });
 
     if (!sku) {
-      return res.status(404).render('404', { message: 'SKU no encontrado' });
+      return res.status(404).send('SKU no encontrado');
     }
 
-    // Buscar la vista correspondiente al rol del usuario
-    const vistaAsignada = await prisma.vistaPorSKU.findFirst({
+    let vistaSKU;
+
+    // Buscar la vista exacta para el SKU y el rol del usuario
+    vistaSKU = await prisma.vistaPorSKU.findFirst({
       where: {
         skuId: sku.id,
         rol: user.rol
       }
     });
 
-    if (!vistaAsignada) {
-      return res.status(403).render('403', { message: 'No tienes acceso a esta vista' });
+    if (!vistaSKU) {
+      return res.status(404).send('No hay vista registrada para este SKU y rol');
     }
 
-    // Renderizar la vista correspondiente
-    return res.render(vistaAsignada.vista, { user });
+    // Determinar carpeta por rol
+    let carpetaVista = '';
+    if (user.rol === 'UReg') {
+      carpetaVista = 'formato_registro';
+    } else if (user.rol === 'UE') {
+      carpetaVista = 'formato_empaque';
+    } else {
+      carpetaVista = 'formato_general';
+    }
+
+    // Renderizar vista con ruta completa (ej: formato_registro/4KM36BLANCO_69360)
+    res.render(`${carpetaVista}/${vistaSKU.vista}`, { user });
+
   } catch (error) {
-    console.error(error);
-    return res.status(500).send('Error interno del servidor');
+    console.error('Error al obtener vista por SKU:', error);
+    res.status(500).send('Error interno del servidor');
   }
 });
->>>>>>> Stashed changes
 
-// Ruta pública para registro de usuario (debe estar antes de cualquier middleware de autenticación)
-router.get('/registro_prueba', (req, res) => {
-  res.render('dasboard_registro');
-});
 
 // Rutas protegidas (para redirigir a los roles)
 // Dashboard para rol Admin inventario
